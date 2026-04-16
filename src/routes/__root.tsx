@@ -6,6 +6,7 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import appCss from "../globals.css?url";
 import { TanStackQueryDevtools } from "../integrations/tanstack-query/devtools";
 
 interface MyRouterContext {
@@ -23,8 +24,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "TanStack Start Starter",
+				title: "Finance Tracker",
 			},
+		],
+		links: [
+			{ rel: "stylesheet", href: appCss },
 		],
 	}),
 	shellComponent: RootDocument,
