@@ -75,8 +75,8 @@ Use app factories in:
   - `prefetchQuery(createAppQueryOptions(...))`
   - `fetchQuery(createAppQueryOptions(...))`
 
-`createAppMutationOptions` / `createAppQueryOptions` unwrap API responses and throw on
-`success: false`, creating a centralized path for:
+`createAppMutationOptions` / `createAppQueryOptions` unwrap API responses and
+throw on `success: false`, creating a centralized path for:
 
 - consistent error handling
 - future toasts/metrics instrumentation
@@ -93,8 +93,8 @@ For post-auth flows (signup/login), use a shared redirect helper:
 - Consume `getPostAuthRedirectTo()` in auth routes after successful mutation
 - Do not hardcode path strings like `"/"` in each auth page
 
-This keeps auth navigation centralized so destination updates (for example, moving to
-`/app` dashboard) happen in one place.
+This keeps auth navigation centralized so destination updates (for example,
+moving to `/app` dashboard) happen in one place.
 
 ## Form Integration Rule
 
@@ -102,4 +102,5 @@ This keeps auth navigation centralized so destination updates (for example, movi
 - On submit, pass values into the mutation payload matching the server input schema
   - example: `mutateAsync({ data: value })`
 
-This keeps form validation and server validation aligned while preserving layered schema responsibilities.
+This keeps form validation and server validation aligned while preserving
+layered schema responsibilities.

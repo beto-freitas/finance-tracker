@@ -1,10 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createAppMutationOptions } from "#/lib/api-client";
-import {
-	createErrorResponse,
-	createSuccessResponse,
-} from "#/lib/api-response";
+import { createErrorResponse, createSuccessResponse } from "#/lib/api-response";
 import { auth } from "#/lib/auth";
 import { HTTP_STATUS } from "#/lib/http-status";
 

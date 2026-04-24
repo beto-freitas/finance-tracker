@@ -3,7 +3,8 @@
 ## Purpose
 
 The `docs/` directory is the source for project-level implementation approaches.
-Use these files to keep conventions explicit, repeatable, and consistent across routes, APIs, loaders, forms, db definition etc.
+Use these files to keep conventions explicit, repeatable, and consistent across
+routes, APIs, loaders, forms, db definition etc.
 
 ## When To Use These Docs
 
@@ -21,4 +22,5 @@ Use these files to keep conventions explicit, repeatable, and consistent across 
 
 ## Index
 
+- [Database Schema Conventions](./database-schema.md)
 - [Server Action Conventions](./server-action.md)
