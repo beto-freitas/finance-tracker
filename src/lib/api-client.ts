@@ -6,7 +6,7 @@ import {
 	queryOptions,
 } from "@tanstack/react-query";
 import type { ApiResponse, JsonValue } from "#/lib/api-response";
-import type { HttpStatusCode } from "#/lib/http-status";
+import { HTTP_STATUS, type HttpStatusCode } from "#/lib/http-status";
 
 export class ApiClientError extends Error {
 	code: HttpStatusCode;
@@ -59,18 +59,41 @@ export function createAppMutationOptions<
 	});
 }
 
+const MAX_RETRY_COUNT = 3;
+
+type AppQueryOverrides = {
+	throwOnError?: boolean;
+	retry?: (retryCount: number, error: unknown) => boolean;
+};
+
+function createDefaultQueryRetry(retryCount: number, error: unknown) {
+	if (
+		error instanceof ApiClientError &&
+		error.code === HTTP_STATUS.UNAUTHORIZED
+	) {
+		return false;
+	}
+
+	return retryCount < MAX_RETRY_COUNT;
+}
+
 export function createAppQueryOptions<
 	TData extends JsonValue | undefined,
 	TQueryKey extends QueryKey = QueryKey,
 >(options: {
 	queryKey: TQueryKey;
-	queryFn: (context: QueryFunctionContext<TQueryKey>) => Promise<unknown>;
+	queryFn: (
+		context: QueryFunctionContext<TQueryKey>,
+	) => Promise<ApiResponse<TData>>;
+	overrides?: AppQueryOverrides;
 }) {
 	return queryOptions({
 		queryKey: options.queryKey,
 		queryFn: async (context: QueryFunctionContext<TQueryKey>) => {
-			const response = (await options.queryFn(context)) as ApiResponse<TData>;
+			const response = await options.queryFn(context);
 			return unwrapApiResponse(response);
 		},
+		throwOnError: options.overrides?.throwOnError ?? true,
+		retry: options.overrides?.retry ?? createDefaultQueryRetry,
 	});
 }
