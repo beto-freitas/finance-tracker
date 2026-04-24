@@ -85,6 +85,20 @@ throw on `success: false`, creating a centralized path for:
 Do not call `mutationOptions` / `queryOptions` directly for server actions.
 Do not call server functions directly from route components, loaders, or UI handlers.
 
+## Query Error Policy Rule
+
+When creating app query factories through `createAppQueryOptions`:
+
+- Default behavior should throw errors (`throwOnError: true`) so failures can
+  bubble into route error boundaries.
+- Retry behavior should follow shared defaults:
+  - do not retry unauthorized (`401`) failures
+  - retry other failures up to the shared cap
+- If a specific query needs local handling, use per-query overrides instead of
+  forking helper implementations.
+
+This preserves a boundary-first default while allowing targeted exceptions.
+
 ## Auth Redirect Rule
 
 For post-auth flows (signup/login), use a shared redirect helper:
@@ -95,6 +109,17 @@ For post-auth flows (signup/login), use a shared redirect helper:
 
 This keeps auth navigation centralized so destination updates (for example,
 moving to `/app` dashboard) happen in one place.
+
+The `/app` index route should also redirect to `getPostAuthRedirectTo()` so
+direct access to `/app` stays aligned with post-auth destination behavior.
+
+## Auth Guard + Query Subscription Rule
+
+- For authenticated route segments, use query hooks in layout components
+  (`useQuery` / `useSuspenseQuery`) as the source of truth for auth state.
+- Do not rely on loader-returned auth data for access decisions.
+- If prefetch is needed for performance, treat it as warm-up only; keep the
+  access check query-subscribed in the layout component.
 
 ## Form Integration Rule
 
