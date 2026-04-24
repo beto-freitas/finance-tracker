@@ -50,7 +50,7 @@ Why this matters:
 
 Use a standardized API response envelope.
 
-- Success shape: `{ success: true, data?: TData, meta?: Record<string, unknown> }`
+- Success shape: `{ success: true, data?: TData, meta?: { [key: string]: JsonValue | undefined } }`
 - Error shape: `{ success: false, error: { code, message, details? } }`
 - Do not return raw ad-hoc objects from server actions.
 
@@ -84,6 +84,17 @@ Use app factories in:
 
 Do not call `mutationOptions` / `queryOptions` directly for server actions.
 Do not call server functions directly from route components, loaders, or UI handlers.
+
+## Auth Redirect Rule
+
+For post-auth flows (signup/login), use a shared redirect helper:
+
+- Define redirect destination in `src/lib/auth-redirect.ts`
+- Consume `getPostAuthRedirectTo()` in auth routes after successful mutation
+- Do not hardcode path strings like `"/"` in each auth page
+
+This keeps auth navigation centralized so destination updates (for example, moving to
+`/app` dashboard) happen in one place.
 
 ## Form Integration Rule
 

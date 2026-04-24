@@ -6,6 +6,7 @@ import { signupFormSchema, signupMutationOptions } from "#/api/signup";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
+import { getPostAuthRedirectTo } from "#/lib/auth-redirect";
 
 export const Route = createFileRoute("/signup")({ component: SignupPage });
 
@@ -34,7 +35,7 @@ function SignupPage() {
 		},
 		onSubmit: async ({ value }) => {
 			await signupMutation.mutateAsync({ data: value });
-			await navigate({ to: "/" });
+			await navigate({ to: getPostAuthRedirectTo() });
 		},
 	});
 
