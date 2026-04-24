@@ -8,7 +8,8 @@ export const timestamps = {
 	createdAt: integer({ mode: "timestamp" as const })
 		.notNull()
 		.$defaultFn(() => new Date()),
-	updatedAt: integer({ mode: "timestamp" as const }).$onUpdate(
-		() => new Date(),
-	),
+	updatedAt: integer({ mode: "timestamp" as const })
+		.notNull()
+		.$defaultFn(() => new Date())
+		.$onUpdate(() => new Date()),
 };
