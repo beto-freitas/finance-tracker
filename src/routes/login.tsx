@@ -1,20 +1,27 @@
 import { useForm } from "@tanstack/react-form";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { loginMutationOptions } from "#/api/login";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
+import { getPostAuthRedirectTo } from "#/lib/auth-redirect";
 
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
 function LoginPage() {
+	const navigate = useNavigate();
+	const loginMutation = useMutation(loginMutationOptions());
+
 	const form = useForm({
 		defaultValues: {
 			email: "",
 			password: "",
 		},
-		onSubmit: () => {
-			alert("clicked!");
+		onSubmit: async ({ value }) => {
+			await loginMutation.mutateAsync({ data: value });
+			await navigate({ to: getPostAuthRedirectTo() });
 		},
 	});
 
@@ -105,9 +112,19 @@ function LoginPage() {
 						)}
 					</form.Field>
 
-					<Button type="submit" className="w-full" size="lg">
-						Login
+					<Button
+						type="submit"
+						className="w-full"
+						size="lg"
+						disabled={loginMutation.isPending}
+					>
+						{loginMutation.isPending ? "Logging in..." : "Login"}
 					</Button>
+					{loginMutation.error && (
+						<p className="text-center text-xs text-destructive">
+							{loginMutation.error.message}
+						</p>
+					)}
 				</form>
 
 				<p className="mt-6 text-center text-sm text-muted-foreground">
