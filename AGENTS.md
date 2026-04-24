@@ -1,0 +1,21 @@
+<!-- intent-skills:start -->
+## Skill Loading
+
+Before substantial work:
+- Skill check: run `npx @tanstack/intent@latest list`, or use skills already listed in context.
+- Skill guidance: if one local skill clearly matches the task, run `npx @tanstack/intent@latest load <package>#<skill>` and follow the returned `SKILL.md`.
+- Multiple matches: prefer the most specific local skill for the package or concern you are changing; load additional skills only when the task spans multiple packages or concerns.
+<!-- intent-skills:end -->
+
+# Finance Tracker
+
+Personal finance web app built with TanStack Start, BetterAuth, Drizzle ORM v1, and Turso (libSQL/SQLite edge).
+
+## Project Status
+
+Early stage. The project has been bootstrapped with TanStack Start, TanStack Query, Tailwind CSS v4, and Biome. Only the root route (`/`) exists with a placeholder component. All features described in this file are to be built according to the PRD (`prd.md` at project root).
+
+Implementation guidance docs:
+
+- `docs/base.md` explains the purpose and usage of the `docs/` directory.
+- `docs/server-action.md` defines form + server-action patterns, including schema layering and options-factory usage for hooks and loader/cache flows.

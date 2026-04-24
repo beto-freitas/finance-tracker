@@ -27,9 +27,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 				title: "Finance Tracker",
 			},
 		],
-		links: [
-			{ rel: "stylesheet", href: appCss },
-		],
+		links: [{ rel: "stylesheet", href: appCss }],
 	}),
 	shellComponent: RootDocument,
 });
