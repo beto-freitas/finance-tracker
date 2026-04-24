@@ -18,4 +18,5 @@ Early stage. The project has been bootstrapped with TanStack Start, TanStack Que
 Implementation guidance docs:
 
 - `docs/base.md` explains the purpose and usage of the `docs/` directory.
+- `docs/database-schema.md` defines Drizzle ORM v1 schema, relation, foreign key, cascade, and DB utility conventions.
 - `docs/server-action.md` defines form + server-action patterns, including schema layering and options-factory usage for hooks and loader/cache flows.
