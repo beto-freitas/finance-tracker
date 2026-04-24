@@ -12,7 +12,9 @@ export type JsonValue =
 	| JsonValue[]
 	| { [key: string]: JsonValue | undefined };
 
-export type ApiSuccessResponse<TData extends JsonValue | undefined = undefined> = {
+export type ApiSuccessResponse<
+	TData extends JsonValue | undefined = undefined,
+> = {
 	success: true;
 	data?: TData;
 	meta?: { [key: string]: JsonValue | undefined };
@@ -27,7 +29,9 @@ export type ApiResponse<TData extends JsonValue | undefined = undefined> =
 	| ApiSuccessResponse<TData>
 	| ApiErrorResponse;
 
-export function createSuccessResponse<TData extends JsonValue | undefined = undefined>(
+export function createSuccessResponse<
+	TData extends JsonValue | undefined = undefined,
+>(
 	data?: TData,
 	meta?: { [key: string]: JsonValue | undefined },
 ): ApiSuccessResponse<TData> {
