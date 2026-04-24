@@ -4,8 +4,8 @@ import {
 	createRootRouteWithContext,
 	HeadContent,
 	Scripts,
+	useMatchRoute,
 	useNavigate,
-	useRouterState,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { GlobalErrorState } from "#/components/errors/global-error-state";
@@ -71,10 +71,8 @@ function RootErrorComponent({
 	reset: () => void;
 }) {
 	const navigate = useNavigate();
-	const currentPathname = useRouterState({
-		select: (state) => state.location.pathname,
-	});
-	const isHomePage = currentPathname === "/";
+	const matchRoute = useMatchRoute();
+	const isHomePage = Boolean(matchRoute({ to: "/", fuzzy: false }));
 	const navigateAwayLabel = isHomePage ? "Go to login" : "Go to home";
 
 	return (

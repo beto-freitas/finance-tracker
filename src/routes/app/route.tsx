@@ -3,8 +3,8 @@ import {
 	createFileRoute,
 	Navigate,
 	Outlet,
+	useMatchRoute,
 	useNavigate,
-	useRouterState,
 } from "@tanstack/react-router";
 import { sessionQueryOptions } from "#/api/session";
 import { AppErrorState } from "#/components/errors/app-error-state";
@@ -32,10 +32,11 @@ function AppErrorComponent({
 	reset: () => void;
 }) {
 	const navigate = useNavigate();
-	const currentPathname = useRouterState({
-		select: (state) => state.location.pathname,
-	});
-	const canGoDashboard = currentPathname !== "/app/dashboard";
+	const matchRoute = useMatchRoute();
+	const isOnDashboard = Boolean(
+		matchRoute({ to: "/app/dashboard", fuzzy: false }),
+	);
+	const canGoDashboard = !isOnDashboard;
 
 	return (
 		<AppErrorState
