@@ -24,3 +24,4 @@ routes, APIs, loaders, forms, db definition etc.
 
 - [Database Schema Conventions](./database-schema.md)
 - [Server Action Conventions](./server-action.md)
+- [Routing, Auth, and Error Boundaries Conventions](./routing-auth-and-errors.md)
