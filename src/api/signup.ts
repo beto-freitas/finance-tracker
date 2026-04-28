@@ -40,14 +40,10 @@ const signupServerFn = createServerFn({ method: "POST" })
 
 			return createSuccessResponse();
 		} catch (error) {
-			if (error instanceof Error) {
-				return createErrorResponse(HTTP_STATUS.BAD_REQUEST, error.message);
-			}
-
-			return createErrorResponse(
-				HTTP_STATUS.INTERNAL_SERVER_ERROR,
-				"Unable to create account. Please try again.",
-			);
+			return createErrorResponse(error, {
+				knownErrorCode: HTTP_STATUS.BAD_REQUEST,
+				fallbackMessage: "Unable to create account. Please try again.",
+			});
 		}
 	});
 

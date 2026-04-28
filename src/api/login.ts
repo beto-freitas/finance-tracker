@@ -30,14 +30,11 @@ const loginServerFn = createServerFn({ method: "POST" })
 
 			return createSuccessResponse();
 		} catch (error) {
-			if (error instanceof Error) {
-				return createErrorResponse(HTTP_STATUS.BAD_REQUEST, error.message);
-			}
-
-			return createErrorResponse(
-				HTTP_STATUS.INTERNAL_SERVER_ERROR,
-				"Unable to log in. Please check your credentials and try again.",
-			);
+			return createErrorResponse(error, {
+				knownErrorCode: HTTP_STATUS.BAD_REQUEST,
+				fallbackMessage:
+					"Unable to log in. Please check your credentials and try again.",
+			});
 		}
 	});
 
