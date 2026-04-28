@@ -58,6 +58,8 @@ Use the shared helpers in server handlers:
 
 - `createSuccessResponse(data?, meta?)`
 - `createErrorResponse(code, message, details?)`
+- `createErrorResponse(error, { knownErrorCode, fallbackMessage, fallbackCode? })`
+  for caught `unknown` errors
 
 Return only the minimum data the caller actually needs in `data`.
 

@@ -43,14 +43,10 @@ const sessionServerFn = createServerFn({ method: "GET" }).handler(async () => {
 			},
 		});
 	} catch (error) {
-		if (error instanceof Error) {
-			return createErrorResponse(HTTP_STATUS.UNAUTHORIZED, error.message);
-		}
-
-		return createErrorResponse(
-			HTTP_STATUS.INTERNAL_SERVER_ERROR,
-			"Unable to get the current session.",
-		);
+		return createErrorResponse(error, {
+			knownErrorCode: HTTP_STATUS.UNAUTHORIZED,
+			fallbackMessage: "Unable to get the current session.",
+		});
 	}
 });
 
