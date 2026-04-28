@@ -79,7 +79,11 @@ export function createErrorResponse(
 		);
 	}
 
-	return buildErrorResponse(codeOrError as HttpStatusCode, messageOrOptions, details);
+	return buildErrorResponse(
+		codeOrError as HttpStatusCode,
+		messageOrOptions,
+		details,
+	);
 }
 
 function buildErrorResponse(
