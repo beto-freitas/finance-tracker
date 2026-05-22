@@ -1,0 +1,36 @@
+---
+description: Finance Tracker domain terms, money rules, and layout conventions
+alwaysApply: true
+---
+
+# Finance Tracker conventions
+
+Read `CONTEXT.md` for the full glossary. Use exact domain terms in code, schema, UI copy, and tests.
+
+## Domain language
+
+- **Cash account** — bank account holding **Cash balance** (not `account`; OAuth table is `account`)
+- **Cash balance** — amount + as-of date from last **Reconciliation**
+- **Cash currency** — ISO 4217 code for all cash amounts (e.g. BRL)
+- **Total cash** — sum across **Cash accounts** (single account for now)
+- **Reconciliation** — user updates **Cash balance** to match their bank app
+
+Avoid glossary anti-patterns: `account` for domain bank account, `sync`, `wallet balance`, `current balance`.
+
+## Money
+
+- Store amounts as **integer minor units** (centavos/cents) in DB and domain logic
+- Never use floats for money
+- Column/field names: `balanceMinor`, `amountMinor`, etc.
+- Display formatting lives in `src/domain/money/`
+
+## Layout
+
+- Business rules and calculations → `src/domain/`
+- Route components stay thin: fetch, render, delegate to domain/server
+- DB table for domain concept: `cash_account` (Drizzle export: `cashAccount`)
+
+## UI baseline
+
+- shadcn components in `src/components/ui/` — Button, Input, Label, Card only for now
+- No full design system until later phases
