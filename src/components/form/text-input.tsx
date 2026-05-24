@@ -14,18 +14,12 @@ export type TextInputProps = FieldControlProps<string> &
  * Bridges the native change event into the `(value: string) => void`
  * contract that `fieldInputWrapper` provides.
  */
-export function TextInput({
-	value,
-	onChange,
-	onBlur,
-	...rest
-}: TextInputProps) {
+export function TextInput({ value, onChange, ...rest }: TextInputProps) {
 	return (
 		<Input
 			type="text"
 			value={value}
 			onChange={(event) => onChange(event.target.value)}
-			onBlur={onBlur}
 			{...rest}
 		/>
 	);
