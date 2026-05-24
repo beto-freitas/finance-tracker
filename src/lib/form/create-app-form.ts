@@ -1,5 +1,6 @@
 import { createFormHook } from "@tanstack/react-form";
 
+import { PasswordInput } from "#/components/form/password-input.tsx";
 import { TextInput } from "#/components/form/text-input.tsx";
 import { fieldContext, formContext } from "#/lib/form/contexts.ts";
 import { fieldInputWrapper } from "#/lib/form/field-input-wrapper.tsx";
@@ -39,6 +40,7 @@ export const { useAppForm, withForm } = createFormHook({
 	formContext,
 	fieldComponents: {
 		TextInput: fieldInputWrapper(TextInput),
+		PasswordInput: fieldInputWrapper(PasswordInput),
 	},
 	formComponents: {},
 });
