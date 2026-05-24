@@ -48,7 +48,7 @@ function Login() {
 				</form.AppField>
 
 				<form.AppField name="password">
-					{(field) => <field.TextInput autoComplete="current-password" />}
+					{(field) => <field.PasswordInput autoComplete="current-password" />}
 				</form.AppField>
 
 				{serverError ? <p role="alert">{serverError}</p> : null}

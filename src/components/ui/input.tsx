@@ -1,6 +1,9 @@
 import type * as React from "react";
 
-import { controlVariants } from "#/components/form/control-variants.ts";
+import {
+	controlInnerVariants,
+	controlShellVariants,
+} from "#/components/form/control-variants.ts";
 import { cn } from "#/lib/utils.ts";
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
@@ -8,7 +11,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
 		<input
 			type={type}
 			data-slot="input"
-			className={cn(controlVariants(), className)}
+			className={cn(controlShellVariants(), controlInnerVariants(), className)}
 			{...props}
 		/>
 	);
