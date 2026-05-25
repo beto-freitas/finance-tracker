@@ -1,5 +1,4 @@
 export function resolveApiMessage(envelope: unknown): string | undefined {
-	console.log("resolveApiMessage", envelope);
 	if (!envelope) {
 		return;
 	}
