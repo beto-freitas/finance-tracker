@@ -17,7 +17,7 @@ When you add or change a field type, registration flow, addon contract, or wrapp
 - Bar primitives: `src/components/ui/input.tsx`, `src/components/ui/input-group.tsx`
 - Icon alias: `src/types/icon.ts` (`Icon = LucideIcon`)
 - Reference implementations: `src/components/form/text-input.tsx`, `src/components/form/password-input.tsx`
-- Live usage: `src/routes/login.tsx`
+- Live usage: `src/routes/_auth/login/-lib/login-form.tsx`
 
 ## Recipe
 
