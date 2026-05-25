@@ -119,7 +119,7 @@ Splitting shell from inner means we never duplicate border/focus/invalid classes
 - Adding a field type means: implement a dumb control (often a thin wrapper around `StringInput`) → wrap with `fieldInputWrapper` → register in `fieldComponents`. See the guide.
 - Routes stay thin: schema + `useAppForm` + `form.AppField`; server/auth errors remain route-local (outside the field stack).
 - Adding an inline affordance to any string control is a prop, not a refactor — pass `leftAddon` or `rightAddon` with the right `variant`.
-- Login uses `TextInput` for email and `PasswordInput` (with internal eye toggle) for password.
+- Login uses `TextInput` for email and `PasswordInput` (with internal eye toggle) for password in `src/routes/_auth/login/-lib/login-form.tsx`.
 
 ## Keeping this ADR current
 
