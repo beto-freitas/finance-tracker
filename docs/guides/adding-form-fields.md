@@ -16,7 +16,8 @@ When you add or change a field type, registration flow, addon contract, or wrapp
 - Addon contract: `src/components/form/input-addon.tsx` (`InputAddon`, `InputAddonSlot`, `renderInputAddon`)
 - Bar primitives: `src/components/ui/input.tsx`, `src/components/ui/input-group.tsx`
 - Icon alias: `src/types/icon.ts` (`Icon = LucideIcon`)
-- Reference implementations: `src/components/form/text-input.tsx`, `src/components/form/password-input.tsx`
+- Reference implementations: `src/components/form/text-input.tsx`, `src/components/form/password-input.tsx`, `src/components/form/select-input.tsx`
+- Options helper: `src/lib/form/to-select-options.ts`
 - Live usage: `src/routes/_auth/login/-lib/login-form.tsx`
 
 ## Recipe
@@ -157,7 +158,29 @@ import { Search } from "lucide-react";
 
 - `TextInput` — both `leftAddon` and `rightAddon` open
 - `PasswordInput` — `leftAddon` open; `rightAddon` **owned by the internal eye toggle** (not exposed). Need a custom right slot? Use `TextInput` + manual addons.
-- Future `SelectInput` — `leftAddon` open; `rightAddon` defaults to a chevron `action` and is overridable.
+- `SelectInput` — `leftAddon` open; `rightAddon` defaults to a chevron `icon` (decorative) and is overridable.
+
+## Default values (`useXDefaultValues`)
+
+Extract `defaultValues` into a `use<Form>DefaultValues()` hook (see login/signup). use **both** `satisfies` and `as` for type safety. designed to accomodate all inputs - selects, dates etc:
+
+```ts
+function useProfileDefaultValues() {
+  return {
+    email: "",
+    currency: undefined,
+  } satisfies ProfileValues as ProfileValues;
+}
+```
+
+- **`satisfies ProfileValues`** — checks the object against the schema type while keeping literal types (so `undefined` stays `undefined`, not a widened optional).
+- **`as ProfileValues`** — gives `useAppForm` the exact form value type; without it, TypeScript can collapse optional select fields incorrectly.
+
+Do not use `as` alone — that bypasses the structural check. Do not rely on `satisfies` alone when passing into `useAppForm` if you hit optional-field errors.
+
+## Select fields (`SelectInput`)
+
+Registered as `field.SelectInput`. Backed by Combobox (`src/components/ui/combobox.tsx`); same `InputGroup` bar as text fields. Options: flat list via `toSelectOptions` + `z.enum([...] as const)` (see `src/lib/form/to-select-options.ts`). Empty value is `undefined`; re-selecting the active option clears. `searchable` defaults to `true`.
 
 ## Checklist
 

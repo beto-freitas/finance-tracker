@@ -11,7 +11,10 @@ import { useAppForm } from "#/lib/form/create-app-form.ts";
 const LoginRoute = getRouteApi("/_auth/login/");
 
 function useLoginFormDefaultValues() {
-	return { email: "", password: "" } satisfies LoginFormValues;
+	return {
+		email: "",
+		password: "",
+	} satisfies LoginFormValues as LoginFormValues;
 }
 
 export function LoginForm() {

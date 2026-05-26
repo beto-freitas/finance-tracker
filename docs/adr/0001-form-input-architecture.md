@@ -10,10 +10,10 @@ Inline affordances inside a control (search icon, password eye, select chevron, 
 
 ```
 useAppForm / form.AppField
-  → field.TextInput | field.PasswordInput   (registered in create-app-form.ts)
+  → field.TextInput | field.PasswordInput | field.SelectInput   (registered in create-app-form.ts)
     → fieldInputWrapper(...)                TanStack binding + label/error wiring
       → BaseField.*                         visual shell (label, description, error)
-        → TextInput | PasswordInput         dumb control; bridges DOM → typed value
+        → TextInput | PasswordInput | SelectInput   dumb control; bridges DOM → typed value
           → StringInput                     @internal layout primitive (Only needed for String-like inputs - Email, Text, Password etc)
             → Input | InputGroup            bar shell (bare or grouped)
               → InputAddon variants         action / icon / text / ReactNode
@@ -94,7 +94,7 @@ Public controls declare which slots are exposed:
 
 - `TextInput` — both `leftAddon` and `rightAddon` open
 - `PasswordInput` — `leftAddon` open; `rightAddon` **omitted** from the public type (the eye toggle owns it)
-- Future `SelectInput` — `leftAddon` open; `rightAddon` defaults to a chevron `action` and is overridable
+- `SelectInput` — `leftAddon` open; `rightAddon` defaults to a chevron `icon` (decorative) and is overridable
 
 The wrapper-side props live in `InputWithAddonsProps` (`leftAddon?` / `rightAddon?`); each control either re-exports them, narrows them with `Omit`, or injects defaults internally.
 
@@ -111,7 +111,8 @@ Splitting shell from inner means we never duplicate border/focus/invalid classes
 
 - Form-level components (`SubmitButton`, `FormErrors`) — reserved for `formComponents` in `create-app-form.ts`.
 - Domain terms in `CONTEXT.md` — this is UI infrastructure, not finance glossary.
-- Textarea and select primitives — both will compose `InputGroup` when added; conventions in this ADR apply unchanged.
+- Textarea primitives — will compose `InputGroup` when added; conventions in this ADR apply unchanged.
+- Grouped select options, multi-select, and Radix `Select` — out of scope for `SelectInput` v1.
 - A labelled `variant: "action"` end button (`{ variant: "action", label, … }`) — wait until a concrete need lands.
 
 ## Consequences

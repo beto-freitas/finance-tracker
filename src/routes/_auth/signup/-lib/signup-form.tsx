@@ -11,7 +11,11 @@ import { useAppForm } from "#/lib/form/create-app-form.ts";
 const SignupRoute = getRouteApi("/_auth/signup/");
 
 function useSignUpFormDefaultValues() {
-	return { name: "", email: "", password: "" } satisfies SignupFormValues;
+	return {
+		name: "",
+		email: "",
+		password: "",
+	} satisfies SignupFormValues as SignupFormValues;
 }
 
 export function SignupForm() {
