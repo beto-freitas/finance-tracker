@@ -242,7 +242,7 @@ import {
 import { useAppForm } from "#/lib/form/create-app-form";
 
 function useCreateIncomeSourceFormDefaultValues() {
-  return { name: "" } satisfies CreateIncomeSourceFormValues;
+  return { name: "" } satisfies CreateIncomeSourceFormValues as CreateIncomeSourceFormValues;
 }
 
 export function CreateIncomeSourceForm() {
