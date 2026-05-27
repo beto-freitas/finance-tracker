@@ -16,9 +16,10 @@ When you add or change a field type, registration flow, addon contract, or wrapp
 - Addon contract: `src/components/form/input-addon.tsx` (`InputAddon`, `InputAddonSlot`, `renderInputAddon`)
 - Bar primitives: `src/components/ui/input.tsx`, `src/components/ui/input-group.tsx`
 - Icon alias: `src/types/icon.ts` (`Icon = LucideIcon`)
-- Reference implementations: `src/components/form/text-input.tsx`, `src/components/form/password-input.tsx`, `src/components/form/select-input.tsx`, `src/components/form/date-input.tsx`
+- Reference implementations: `src/components/form/text-input.tsx`, `src/components/form/password-input.tsx`, `src/components/form/select-input.tsx`, `src/components/form/date-input.tsx`, `src/components/form/number-input.tsx`
 - Options helper: `src/lib/form/to-select-options.ts`
 - Date display helpers: `src/lib/form/date-display.ts`
+- Number display helpers: `src/lib/form/number-display.ts`
 - Live usage: `src/routes/_auth/login/-lib/login-form.tsx`
 
 ## Recipe
@@ -178,6 +179,8 @@ function useProfileDefaultValues() {
 - **`satisfies ProfileValues`** — checks the object against the schema type while keeping literal types (so `undefined` stays `undefined`, not a widened optional).
 - **`as ProfileValues`** — gives `useAppForm` the exact form value type; without it, TypeScript can collapse optional select fields incorrectly.
 
+For forms with **required** `z.number()` fields that start empty, use `FormValuesWithEmptyNumbers<ProfileValues>` instead of `ProfileValues` in the hook (see Number fields below).
+
 Do not use `as` alone — that bypasses the structural check. Do not rely on `satisfies` alone when passing into `useAppForm` if you hit optional-field errors.
 
 ## Select fields (`SelectInput`)
@@ -192,6 +195,19 @@ Registered as `field.DateInput`. Form value is an ISO calendar date (`YYYY-MM-DD
 - **Bounds (v1):** validate `min`/`max` in the form schema only; optional `min`/`max` props on the control are a follow-up.
 
 Default values: `dueDate: undefined` with `satisfies` + `as` on the form values type (see login/signup hooks).
+
+## Number fields (`NumberInput`)
+
+Registered as `field.NumberInput`. Form value is `number | undefined` when empty. Locale decimal separator comes from `Intl` via `src/lib/form/number-display.ts`; pass `locale` to override (useful for a future `CurrencyInput`).
+
+Use required `z.number()` when the field must be filled on submit; use `z.number().optional()` when empty is valid output. Either way, default empty fields to `undefined` and type defaults with `FormValuesWithEmptyNumbers<z.infer<typeof schema>>` from `src/lib/form/form-values.ts` (see lab `number-input-lab-schema.ts` / `useNumberInputLabDefaultValues`).
+
+- **Editing:** `type="text"`, `inputMode="decimal"` — no native spinner buttons. Digits insert at the caret on a fixed scale (`maximumFractionDigits`, default `2`). The decimal separator is display-only (locale). Empty display is `""`; first digit from empty at end (e.g. `1` → `0.01`). Clear/backspace to empty → `undefined`; explicit `0` is a real value (`0.00` on blur).
+- **Bounds (v1):** validate `min` / `max` in the form schema only — not on the control.
+
+Default values: `amount: undefined` with `satisfies` + `as` on `FormValuesWithEmptyNumbers<YourValues>` (not plain `z.infer` when any number field is required in Zod).
+
+**Out of scope v1:** thousands grouping, `min`/`max` on the control, `CurrencyInput` (will reuse `number-display.ts`).
 
 ## Checklist
 
