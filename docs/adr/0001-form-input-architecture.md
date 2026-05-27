@@ -10,10 +10,10 @@ Inline affordances inside a control (search icon, password eye, select chevron, 
 
 ```
 useAppForm / form.AppField
-  → field.TextInput | field.PasswordInput | field.SelectInput   (registered in create-app-form.ts)
+  → field.TextInput | field.PasswordInput | field.SelectInput | field.DateInput   (registered in create-app-form.ts)
     → fieldInputWrapper(...)                TanStack binding + label/error wiring
       → BaseField.*                         visual shell (label, description, error)
-        → TextInput | PasswordInput | SelectInput   dumb control; bridges DOM → typed value
+        → TextInput | PasswordInput | SelectInput | DateInput   dumb control; bridges DOM → typed value
           → StringInput                     @internal layout primitive (Only needed for String-like inputs - Email, Text, Password etc)
             → Input | InputGroup            bar shell (bare or grouped)
               → InputAddon variants         action / icon / text / ReactNode
@@ -58,7 +58,7 @@ Errors are normalized from Standard Schema issues, plain strings, or mixed slots
 
 ## Control conventions
 
-- Each control type owns one value shape (`string` for `TextInput` / `PasswordInput`, `number` for a future `NumberInput`, etc.).
+- Each control type owns one value shape (`string` for `TextInput` / `PasswordInput`, ISO date `string | undefined` for `DateInput`, `number` for a future `NumberInput`, etc.).
 - `TextInput` is `type="text"` only — password, email, and number are separate registered components, not props on `TextInput`.
 - New controls reuse `controlShellVariants` (the bar) and `controlInnerVariants` (the text) so every "bar" looks identical whether bare or grouped.
 - String-valued controls delegate layout to the `@internal` `StringInput` primitive instead of branching on addons themselves.
@@ -95,6 +95,7 @@ Public controls declare which slots are exposed:
 - `TextInput` — both `leftAddon` and `rightAddon` open
 - `PasswordInput` — `leftAddon` open; `rightAddon` **omitted** from the public type (the eye toggle owns it)
 - `SelectInput` — `leftAddon` open; `rightAddon` defaults to a chevron `icon` (decorative) and is overridable
+- `DateInput` — `leftAddon` open; `rightAddon` **omitted** (calendar popover trigger owns the end slot)
 
 The wrapper-side props live in `InputWithAddonsProps` (`leftAddon?` / `rightAddon?`); each control either re-exports them, narrows them with `Omit`, or injects defaults internally.
 

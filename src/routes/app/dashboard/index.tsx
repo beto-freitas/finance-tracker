@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Button } from "#/components/ui/button.tsx";
 import { logoutMutationOptions } from "#/features/auth/mutations/logout-mutation-options.ts";
-import { useAuth } from "#/lib/hooks/use-auth";
+import { useAuth } from "#/lib/hooks/use-auth.ts";
 
 export const Route = createFileRoute("/app/dashboard/")({
 	component: DashboardPage,
