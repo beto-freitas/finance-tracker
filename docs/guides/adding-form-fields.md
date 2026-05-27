@@ -16,10 +16,12 @@ When you add or change a field type, registration flow, addon contract, or wrapp
 - Addon contract: `src/components/form/input-addon.tsx` (`InputAddon`, `InputAddonSlot`, `renderInputAddon`)
 - Bar primitives: `src/components/ui/input.tsx`, `src/components/ui/input-group.tsx`
 - Icon alias: `src/types/icon.ts` (`Icon = LucideIcon`)
-- Reference implementations: `src/components/form/text-input.tsx`, `src/components/form/password-input.tsx`, `src/components/form/select-input.tsx`, `src/components/form/date-input.tsx`, `src/components/form/number-input.tsx`
+- Reference implementations: `src/components/form/text-input.tsx`, `src/components/form/password-input.tsx`, `src/components/form/select-input.tsx`, `src/components/form/date-input.tsx`, `src/components/form/number-input.tsx`, `src/components/form/currency-input.tsx`
 - Options helper: `src/lib/form/to-select-options.ts`
+- Currency codes: `src/lib/currency.ts` (`SUPPORTED_CURRENCIES`, `CurrencyCode`)
 - Date display helpers: `src/lib/form/date-display.ts`
 - Number display helpers: `src/lib/form/number-display.ts`
+- Currency display helpers: `src/lib/form/currency-display.ts`
 - Live usage: `src/routes/_auth/login/-lib/login-form.tsx`
 
 ## Recipe
@@ -198,16 +200,26 @@ Default values: `dueDate: undefined` with `satisfies` + `as` on the form values 
 
 ## Number fields (`NumberInput`)
 
-Registered as `field.NumberInput`. Form value is `number | undefined` when empty. Locale decimal separator comes from `Intl` via `src/lib/form/number-display.ts`; pass `locale` to override (useful for a future `CurrencyInput`).
+Registered as `field.NumberInput`. Form value is `number | undefined` when empty. Locale decimal separator comes from `Intl` via `src/lib/form/number-display.ts`; pass `locale` to override.
 
 Use required `z.number()` when the field must be filled on submit; use `z.number().optional()` when empty is valid output. Either way, default empty fields to `undefined` and type defaults with `FormValuesWithEmptyNumbers<z.infer<typeof schema>>` from `src/lib/form/form-values.ts`.
 
-- **Editing:** `type="text"`, `inputMode="decimal"` — no native spinner buttons. Digits insert at the caret on a fixed scale (`maximumFractionDigits`, default `2`). The decimal separator is display-only (locale). Empty display is `""`; first digit from empty at end (e.g. `1` → `0.01`). Clear/backspace to empty → `undefined`; explicit `0` is a real value (`0.00` on blur).
+- **Editing:** `type="text"`, `inputMode="decimal"` — no native spinner buttons. Digits insert at the caret on a fixed scale (`maximumFractionDigits`, default `0`). Pass `maximumFractionDigits` explicitly for decimals (e.g. `2`). The decimal separator is display-only (locale). Empty display is `""`; with scale `2`, first digit from empty at end (e.g. `1` → `0.01`); with scale `0`, first digit is a whole unit. Clear/backspace to empty → `undefined`; explicit `0` is a real value.
 - **Bounds (v1):** validate `min` / `max` in the form schema only — not on the control.
 
 Default values: `amount: undefined` with `satisfies` + `as` on `FormValuesWithEmptyNumbers<YourValues>` (not plain `z.infer` when any number field is required in Zod).
 
-**Out of scope v1:** thousands grouping, `min`/`max` on the control, `CurrencyInput` (will reuse `number-display.ts`).
+**Out of scope v1:** thousands grouping, `min`/`max` on the control.
+
+## Currency fields (`CurrencyInput`)
+
+Registered as `field.CurrencyInput`. Thin wrapper over `NumberInput` — same form value (`number | undefined`), same Zod and `FormValuesWithEmptyNumbers` rules as number fields.
+
+- **Required:** `currency` — `CurrencyCode` from `src/lib/currency.ts` (`BRL`, `USD`). Display/typing context only; which currency an amount *means* comes from the form field / domain model, not from the stored value.
+- **Optional:** `locale` — browser default, then `pt-BR` (same as `DateInput` / `NumberInput`). Controls decimal separator; does not change the ISO currency code.
+- **Customization:** fraction digits, extra addons, or non-money decimals → use `field.NumberInput` directly.
+
+**Out of scope v1:** thousands grouping, `min`/`max` on the control, storing `CurrencyCode` in the form value.
 
 ## Checklist
 

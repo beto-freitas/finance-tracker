@@ -58,13 +58,13 @@ export function resolveStep(
 }
 
 export function resolveScale(options: NumberFormatOptions): number {
-	return options.maximumFractionDigits ?? 2;
+	return options.maximumFractionDigits ?? 0;
 }
 
 export function resolveMinimumFractionDigits(
 	options: NumberFormatOptions,
 ): number {
-	return options.minimumFractionDigits ?? options.maximumFractionDigits ?? 2;
+	return options.minimumFractionDigits ?? options.maximumFractionDigits ?? 0;
 }
 
 /** Form value → edit state. */
