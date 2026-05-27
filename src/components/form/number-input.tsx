@@ -73,7 +73,7 @@ export function NumberInput({
 	locale,
 	allowNegative = true,
 	minimumFractionDigits,
-	maximumFractionDigits = 2,
+	maximumFractionDigits = 0,
 	step,
 	leftAddon,
 	rightAddon,
@@ -97,8 +97,8 @@ export function NumberInput({
 		() => ({
 			locale,
 			minimumFractionDigits:
-				minimumFractionDigits ?? maximumFractionDigits ?? 2,
-			maximumFractionDigits: maximumFractionDigits ?? 2,
+				minimumFractionDigits ?? maximumFractionDigits ?? 0,
+			maximumFractionDigits: maximumFractionDigits ?? 0,
 		}),
 		[locale, maximumFractionDigits, minimumFractionDigits],
 	);

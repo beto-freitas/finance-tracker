@@ -32,6 +32,14 @@ describe("formatNumberToDisplay", () => {
 });
 
 describe("empty field end-typing", () => {
+	it("types from empty with scale 0 inserts whole units", () => {
+		const intOptions = { locale: "en-US", maximumFractionDigits: 0 };
+		const state = valueToEditState(undefined, intOptions);
+		const afterOne = applyDigit(state, 0, "1", intOptions);
+		expect(afterOne.display).toBe("1");
+		expect(afterOne.value).toBe(1);
+	});
+
 	it("types from empty with caret at end", () => {
 		let state = valueToEditState(undefined, enUs);
 		let gap = 0;

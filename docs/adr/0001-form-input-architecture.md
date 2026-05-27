@@ -2,7 +2,7 @@
 
 Forms use TanStack Form with a three-layer stack: `useAppForm` registers field components; `fieldInputWrapper` binds TanStack field state to a dumb control and renders the shared `BaseField` shell; each control (e.g. `TextInput`) only bridges native events to a typed value. Validation is a form-level Zod schema (Standard Schema); labels are derived from field names unless overridden; errors show once a field is touched or submit has been attempted.
 
-Inline affordances inside a control (search icon, password eye, select chevron, currency suffix) compose through a single `InputAddon` contract and the `InputGroup` shell, so every "bar" stays visually identical whether it has addons or not.
+Inline affordances inside a control (search icon, password eye, select chevron, currency symbol) compose through a single `InputAddon` contract and the `InputGroup` shell, so every "bar" stays visually identical whether it has addons or not.
 
 **Guide:** step-by-step instructions for adding a new field type live in [`docs/guides/adding-form-fields.md`](../guides/adding-form-fields.md).
 
@@ -10,12 +10,13 @@ Inline affordances inside a control (search icon, password eye, select chevron, 
 
 ```
 useAppForm / form.AppField
-  → field.TextInput | field.PasswordInput | field.SelectInput | field.DateInput | field.NumberInput   (registered in create-app-form.ts)
+  → field.TextInput | field.PasswordInput | field.SelectInput | field.DateInput | field.NumberInput | field.CurrencyInput   (registered in create-app-form.ts)
     → fieldInputWrapper(...)                TanStack binding + label/error wiring
       → BaseField.*                         visual shell (label, description, error)
-        → TextInput | PasswordInput | SelectInput | DateInput | NumberInput   dumb control; bridges DOM → typed value
+        → TextInput | PasswordInput | SelectInput | DateInput | NumberInput | CurrencyInput   dumb control; bridges DOM → typed value
           → StringInput                     @internal layout primitive (Only needed for String-like inputs - Email, Text, Password etc)
-          → number-display.ts               @internal fixed-scale caret editor (NumberInput; shared with future CurrencyInput)
+          → CurrencyInput → NumberInput     thin wrapper; Intl symbol + fraction scale via currency-display.ts
+          → number-display.ts               @internal fixed-scale caret editor (NumberInput editor)
             → Input | InputGroup            bar shell (bare or grouped)
               → InputAddon variants         action / icon / text / ReactNode
 ```
@@ -33,6 +34,8 @@ useAppForm / form.AppField
 | Bar primitives | `src/components/ui/input.tsx`, `src/components/ui/input-group.tsx` | Bare `<Input>` and the grouped `InputGroup` shell |
 | Icon alias | `src/types/icon.ts` | `Icon = LucideIcon` — swap libraries in one place |
 | Number display helpers | `src/lib/form/number-display.ts` | Locale decimal separator; caret-aware digit buffer; paste/step — no TanStack/DOM |
+| Currency display helpers | `src/lib/form/currency-display.ts` | `Intl` symbol, addon side, fraction digits for `CurrencyCode` — no TanStack/DOM |
+| Currency codes | `src/lib/currency.ts` | `SUPPORTED_CURRENCIES`, `CurrencyCode`, labels for selects |
 
 **Rejected alternative:** a single smart field component that owns both TanStack wiring and rendering. Splitting wrapper (binding) from control (value bridging) from shell (markup) keeps new input types small and testable.
 
@@ -60,7 +63,7 @@ Errors are normalized from Standard Schema issues, plain strings, or mixed slots
 
 ## Control conventions
 
-- Each control type owns one value shape (`string` for `TextInput` / `PasswordInput`, ISO date `string | undefined` for `DateInput`, `number | undefined` for `NumberInput`, etc.).
+- Each control type owns one value shape (`string` for `TextInput` / `PasswordInput`, ISO date `string | undefined` for `DateInput`, `number | undefined` for `NumberInput` / `CurrencyInput`, etc.).
 - `TextInput` is `type="text"` only — password, email, and number are separate registered components, not props on `TextInput`.
 - `NumberInput` uses `type="text"` with `inputMode="decimal"` — not `type="number"` (no native spinners). Editing is a fixed-scale, caret-aware digit buffer (`number-display.ts`), not free-form locale typing.
 - New controls reuse `controlShellVariants` (the bar) and `controlInnerVariants` (the text) so every "bar" looks identical whether bare or grouped.
@@ -99,7 +102,8 @@ Public controls declare which slots are exposed:
 - `PasswordInput` — `leftAddon` open; `rightAddon` **omitted** from the public type (the eye toggle owns it)
 - `SelectInput` — `leftAddon` open; `rightAddon` defaults to a chevron `icon` (decorative) and is overridable
 - `DateInput` — `leftAddon` open; `rightAddon` **omitted** (calendar popover trigger owns the end slot)
-- `NumberInput` — both `leftAddon` and `rightAddon` open (future `CurrencyInput` will reuse `number-display.ts` and may default a currency suffix)
+- `NumberInput` — both `leftAddon` and `rightAddon` open; default `maximumFractionDigits` is `0` (integers / generic decimals)
+- `CurrencyInput` — both addon slots **omitted** from the public type; injects currency symbol from `Intl` via `currency-display.ts`. Required `currency` (`CurrencyCode`); `allowNegative` defaults to `false`. Custom fraction digits or addons → use `NumberInput` directly.
 
 The wrapper-side props live in `InputWithAddonsProps` (`leftAddon?` / `rightAddon?`); each control either re-exports them, narrows them with `Omit`, or injects defaults internally.
 

@@ -1,5 +1,6 @@
 import { createFormHook } from "@tanstack/react-form";
 
+import { CurrencyInput } from "#/components/form/currency-input.tsx";
 import { DateInput } from "#/components/form/date-input.tsx";
 import { NumberInput } from "#/components/form/number-input.tsx";
 import { PasswordInput } from "#/components/form/password-input.tsx";
@@ -47,6 +48,7 @@ export const { useAppForm, withForm } = createFormHook({
 		SelectInput: fieldInputWrapper(SelectInput),
 		DateInput: fieldInputWrapper(DateInput),
 		NumberInput: fieldInputWrapper(NumberInput),
+		CurrencyInput: fieldInputWrapper(CurrencyInput),
 	},
 	formComponents: {},
 });
