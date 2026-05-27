@@ -16,8 +16,9 @@ When you add or change a field type, registration flow, addon contract, or wrapp
 - Addon contract: `src/components/form/input-addon.tsx` (`InputAddon`, `InputAddonSlot`, `renderInputAddon`)
 - Bar primitives: `src/components/ui/input.tsx`, `src/components/ui/input-group.tsx`
 - Icon alias: `src/types/icon.ts` (`Icon = LucideIcon`)
-- Reference implementations: `src/components/form/text-input.tsx`, `src/components/form/password-input.tsx`, `src/components/form/select-input.tsx`
+- Reference implementations: `src/components/form/text-input.tsx`, `src/components/form/password-input.tsx`, `src/components/form/select-input.tsx`, `src/components/form/date-input.tsx`
 - Options helper: `src/lib/form/to-select-options.ts`
+- Date display helpers: `src/lib/form/date-display.ts`
 - Live usage: `src/routes/_auth/login/-lib/login-form.tsx`
 
 ## Recipe
@@ -159,6 +160,7 @@ import { Search } from "lucide-react";
 - `TextInput` — both `leftAddon` and `rightAddon` open
 - `PasswordInput` — `leftAddon` open; `rightAddon` **owned by the internal eye toggle** (not exposed). Need a custom right slot? Use `TextInput` + manual addons.
 - `SelectInput` — `leftAddon` open; `rightAddon` defaults to a chevron `icon` (decorative) and is overridable.
+- `DateInput` — `leftAddon` open; `rightAddon` owned by the calendar trigger (not exposed).
 
 ## Default values (`useXDefaultValues`)
 
@@ -181,6 +183,15 @@ Do not use `as` alone — that bypasses the structural check. Do not rely on `sa
 ## Select fields (`SelectInput`)
 
 Registered as `field.SelectInput`. Backed by Combobox (`src/components/ui/combobox.tsx`); same `InputGroup` bar as text fields. Options: flat list via `toSelectOptions` + `z.enum([...] as const)` (see `src/lib/form/to-select-options.ts`). Empty value is `undefined`; re-selecting the active option clears. `searchable` defaults to `true`.
+
+## Date fields (`DateInput`)
+
+Registered as `field.DateInput`. Form value is an ISO calendar date (`YYYY-MM-DD`) or `undefined` when empty — same shape for the control and Zod (`z.iso.date().optional()`). Display format follows the browser locale by default (`Intl` via `src/lib/form/date-display.ts`); pass `locale` to override. Typed digits follow **locale field order** (placeholder shows `DD/MM/YYYY` vs `MM/DD/YYYY`); eight digits that do not form a real calendar date clear on blur.
+
+- **Typing:** locale placeholder; separator insertion while typing; commits ISO when 8 digits form a valid calendar date (including before blur); invalid blur clears field and sets `undefined`.
+- **Bounds (v1):** validate `min`/`max` in the form schema only; optional `min`/`max` props on the control are a follow-up.
+
+Default values: `dueDate: undefined` with `satisfies` + `as` on the form values type (see login/signup hooks).
 
 ## Checklist
 
