@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Button } from "#/components/ui/button.tsx";
 import { logoutMutationOptions } from "#/features/auth/mutations/logout-mutation-options.ts";
 import { useAuth } from "#/lib/hooks/use-auth.ts";
@@ -22,13 +22,6 @@ function DashboardPage() {
 		<main className="flex flex-col gap-4 p-6">
 			<h1>Dashboard</h1>
 			<p>Logged in as {auth.user.email}</p>
-
-			<Link
-				to="/app/lab/number-input"
-				className="text-primary text-sm underline-offset-4 hover:underline"
-			>
-				NumberInput lab
-			</Link>
 
 			<Button
 				type="button"

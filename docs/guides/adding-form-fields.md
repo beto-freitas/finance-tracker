@@ -200,7 +200,7 @@ Default values: `dueDate: undefined` with `satisfies` + `as` on the form values 
 
 Registered as `field.NumberInput`. Form value is `number | undefined` when empty. Locale decimal separator comes from `Intl` via `src/lib/form/number-display.ts`; pass `locale` to override (useful for a future `CurrencyInput`).
 
-Use required `z.number()` when the field must be filled on submit; use `z.number().optional()` when empty is valid output. Either way, default empty fields to `undefined` and type defaults with `FormValuesWithEmptyNumbers<z.infer<typeof schema>>` from `src/lib/form/form-values.ts` (see lab `number-input-lab-schema.ts` / `useNumberInputLabDefaultValues`).
+Use required `z.number()` when the field must be filled on submit; use `z.number().optional()` when empty is valid output. Either way, default empty fields to `undefined` and type defaults with `FormValuesWithEmptyNumbers<z.infer<typeof schema>>` from `src/lib/form/form-values.ts`.
 
 - **Editing:** `type="text"`, `inputMode="decimal"` — no native spinner buttons. Digits insert at the caret on a fixed scale (`maximumFractionDigits`, default `2`). The decimal separator is display-only (locale). Empty display is `""`; first digit from empty at end (e.g. `1` → `0.01`). Clear/backspace to empty → `undefined`; explicit `0` is a real value (`0.00` on blur).
 - **Bounds (v1):** validate `min` / `max` in the form schema only — not on the control.

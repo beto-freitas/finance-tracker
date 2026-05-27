@@ -16,7 +16,6 @@ import { Route as AppDashboardIndexRouteImport } from './routes/app/dashboard/in
 import { Route as AuthSignupIndexRouteImport } from './routes/_auth/signup/index'
 import { Route as AuthLoginIndexRouteImport } from './routes/_auth/login/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as AppLabNumberInputIndexRouteImport } from './routes/app/lab/number-input/index'
 
 const AppRouteRoute = AppRouteRouteImport.update({
   id: '/app',
@@ -52,11 +51,6 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppLabNumberInputIndexRoute = AppLabNumberInputIndexRouteImport.update({
-  id: '/lab/number-input/',
-  path: '/lab/number-input/',
-  getParentRoute: () => AppRouteRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -65,7 +59,6 @@ export interface FileRoutesByFullPath {
   '/login/': typeof AuthLoginIndexRoute
   '/signup/': typeof AuthSignupIndexRoute
   '/app/dashboard/': typeof AppDashboardIndexRoute
-  '/app/lab/number-input/': typeof AppLabNumberInputIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -74,7 +67,6 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginIndexRoute
   '/signup': typeof AuthSignupIndexRoute
   '/app/dashboard': typeof AppDashboardIndexRoute
-  '/app/lab/number-input': typeof AppLabNumberInputIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,7 +77,6 @@ export interface FileRoutesById {
   '/_auth/login/': typeof AuthLoginIndexRoute
   '/_auth/signup/': typeof AuthSignupIndexRoute
   '/app/dashboard/': typeof AppDashboardIndexRoute
-  '/app/lab/number-input/': typeof AppLabNumberInputIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -96,16 +87,8 @@ export interface FileRouteTypes {
     | '/login/'
     | '/signup/'
     | '/app/dashboard/'
-    | '/app/lab/number-input/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/app'
-    | '/api/auth/$'
-    | '/login'
-    | '/signup'
-    | '/app/dashboard'
-    | '/app/lab/number-input'
+  to: '/' | '/app' | '/api/auth/$' | '/login' | '/signup' | '/app/dashboard'
   id:
     | '__root__'
     | '/'
@@ -115,7 +98,6 @@ export interface FileRouteTypes {
     | '/_auth/login/'
     | '/_auth/signup/'
     | '/app/dashboard/'
-    | '/app/lab/number-input/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -176,13 +158,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/lab/number-input/': {
-      id: '/app/lab/number-input/'
-      path: '/lab/number-input'
-      fullPath: '/app/lab/number-input/'
-      preLoaderRoute: typeof AppLabNumberInputIndexRouteImport
-      parentRoute: typeof AppRouteRoute
-    }
   }
 }
 
@@ -202,12 +177,10 @@ const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
 
 interface AppRouteRouteChildren {
   AppDashboardIndexRoute: typeof AppDashboardIndexRoute
-  AppLabNumberInputIndexRoute: typeof AppLabNumberInputIndexRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppDashboardIndexRoute: AppDashboardIndexRoute,
-  AppLabNumberInputIndexRoute: AppLabNumberInputIndexRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
