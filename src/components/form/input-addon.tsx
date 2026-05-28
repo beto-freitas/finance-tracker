@@ -5,7 +5,7 @@ import {
 	InputGroupButton,
 	InputGroupText,
 } from "#/components/ui/input-group.tsx";
-import type { Icon } from "#/types/icon.ts";
+import type { Icon } from "#/lib/icon";
 
 /**
  * Clickable addon. Renders as an `InputGroupButton` so every interactive
