@@ -1,4 +1,4 @@
-import type { CurrencyCode } from "#/lib/currency.ts";
+import type { CurrencyCode } from "#/lib/currency/currencies";
 
 const DEFAULT_LOCALE = "pt-BR";
 
