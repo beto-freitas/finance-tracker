@@ -13,6 +13,7 @@ import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppDashboardIndexRouteImport } from './routes/app/dashboard/index'
+import { Route as AppCashAccountsIndexRouteImport } from './routes/app/cash-accounts/index'
 import { Route as AuthSignupIndexRouteImport } from './routes/_auth/signup/index'
 import { Route as AuthLoginIndexRouteImport } from './routes/_auth/login/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -34,6 +35,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppDashboardIndexRoute = AppDashboardIndexRouteImport.update({
   id: '/dashboard/',
   path: '/dashboard/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppCashAccountsIndexRoute = AppCashAccountsIndexRouteImport.update({
+  id: '/cash-accounts/',
+  path: '/cash-accounts/',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AuthSignupIndexRoute = AuthSignupIndexRouteImport.update({
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/login/': typeof AuthLoginIndexRoute
   '/signup/': typeof AuthSignupIndexRoute
+  '/app/cash-accounts/': typeof AppCashAccountsIndexRoute
   '/app/dashboard/': typeof AppDashboardIndexRoute
 }
 export interface FileRoutesByTo {
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/login': typeof AuthLoginIndexRoute
   '/signup': typeof AuthSignupIndexRoute
+  '/app/cash-accounts': typeof AppCashAccountsIndexRoute
   '/app/dashboard': typeof AppDashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_auth/login/': typeof AuthLoginIndexRoute
   '/_auth/signup/': typeof AuthSignupIndexRoute
+  '/app/cash-accounts/': typeof AppCashAccountsIndexRoute
   '/app/dashboard/': typeof AppDashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -86,9 +95,17 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/login/'
     | '/signup/'
+    | '/app/cash-accounts/'
     | '/app/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app' | '/api/auth/$' | '/login' | '/signup' | '/app/dashboard'
+  to:
+    | '/'
+    | '/app'
+    | '/api/auth/$'
+    | '/login'
+    | '/signup'
+    | '/app/cash-accounts'
+    | '/app/dashboard'
   id:
     | '__root__'
     | '/'
@@ -97,6 +114,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/_auth/login/'
     | '/_auth/signup/'
+    | '/app/cash-accounts/'
     | '/app/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -135,6 +153,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/app/dashboard/'
       preLoaderRoute: typeof AppDashboardIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/cash-accounts/': {
+      id: '/app/cash-accounts/'
+      path: '/cash-accounts'
+      fullPath: '/app/cash-accounts/'
+      preLoaderRoute: typeof AppCashAccountsIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_auth/signup/': {
@@ -176,10 +201,12 @@ const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
 )
 
 interface AppRouteRouteChildren {
+  AppCashAccountsIndexRoute: typeof AppCashAccountsIndexRoute
   AppDashboardIndexRoute: typeof AppDashboardIndexRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppCashAccountsIndexRoute: AppCashAccountsIndexRoute,
   AppDashboardIndexRoute: AppDashboardIndexRoute,
 }
 

@@ -22,6 +22,7 @@ function DashboardPage() {
 		<main className="flex flex-col gap-4 p-6">
 			<h1>Dashboard</h1>
 			<p>Logged in as {auth.user.email}</p>
+			<Route.Link to="/app/cash-accounts">Cash accounts</Route.Link>
 
 			<Button
 				type="button"

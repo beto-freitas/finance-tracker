@@ -5,7 +5,7 @@ import { fieldNameToLabel } from "#/lib/form/field-name-to-label.ts";
 describe("fieldNameToLabel", () => {
 	it("splits camelCase into Title Case words", () => {
 		expect(fieldNameToLabel("firstName")).toBe("First Name");
-		expect(fieldNameToLabel("balanceMinor")).toBe("Balance Minor");
+		expect(fieldNameToLabel("balanceMajor")).toBe("Balance Major");
 	});
 
 	it("splits snake_case and kebab-case", () => {
