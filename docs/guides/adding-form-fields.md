@@ -1,10 +1,10 @@
 # Adding a form field type
 
-How to create and register a new input control for `useAppForm`. Architectural rationale is in [ADR-0001](../adr/0001-form-input-architecture.md).
+How to create and register a new input control for `useAppForm`. Architectural rationale is in [ADR-0001](../adr/0001-form-input-architecture.md). Import paths: [`project-layout.md`](./project-layout.md).
 
 ## Keeping this guide current
 
-When you add or change a field type, registration flow, addon contract, or wrapper contract, update **this guide** in the same PR. If the change alters an architectural decision (layering, validation, labels, errors, addons, bar styling), update [ADR-0001](../adr/0001-form-input-architecture.md) too. Code and docs should land together — do not merge definition changes and leave docs for later.
+When you add or change a field type, registration flow, addon contract, or wrapper contract, update **this guide** in the same PR. If the change alters an architectural decision (layering, validation, labels, errors, addons, bar styling), update [ADR-0001](../adr/0001-form-input-architecture.md) too. Code and docs should land together.
 
 ## Prerequisites
 
@@ -15,14 +15,15 @@ When you add or change a field type, registration flow, addon contract, or wrapp
 - Internal string primitive: `src/components/form/string-input.tsx` (`@internal`)
 - Addon contract: `src/components/form/input-addon.tsx` (`InputAddon`, `InputAddonSlot`, `renderInputAddon`)
 - Bar primitives: `src/components/ui/input.tsx`, `src/components/ui/input-group.tsx`
-- Icon alias: `src/types/icon.ts` (`Icon = LucideIcon`)
+- Icon alias: `src/lib/utils.ts` (`Icon = LucideIcon`)
 - Reference implementations: `src/components/form/text-input.tsx`, `src/components/form/password-input.tsx`, `src/components/form/select-input.tsx`, `src/components/form/date-input.tsx`, `src/components/form/number-input.tsx`, `src/components/form/currency-input.tsx`
 - Options helper: `src/lib/form/to-select-options.ts`
-- Currency codes: `src/lib/currency.ts` (`SUPPORTED_CURRENCIES`, `CurrencyCode`)
+- Currency codes: `src/lib/currency/currencies.ts` (`SUPPORTED_CURRENCIES`, `CurrencyCode`)
 - Date display helpers: `src/lib/form/date-display.ts`
+- Date persistence helpers: `src/lib/date/iso-date.ts` (`toIsoDate`, `todayIsoDate`)
 - Number display helpers: `src/lib/form/number-display.ts`
 - Currency display helpers: `src/lib/form/currency-display.ts`
-- Live usage: `src/routes/_auth/login/-lib/login-form.tsx`
+- Live usage: `src/routes/_auth/login/-lib/login-form.tsx`, `src/routes/app/cash-accounts/-lib/create-cash-account-form.tsx`
 
 ## Recipe
 
@@ -84,7 +85,7 @@ The wrapper handles TanStack binding, heuristic label, error visibility, and `Ba
 ```tsx
 const form = useAppForm({
   defaultValues: { email: "", password: "" },
-  validators: { onChange: schema, onSubmit: schema },
+  validators: { onChange: schema },
 });
 
 <form.AppField name="email">
@@ -101,11 +102,11 @@ const form = useAppForm({
 </form.AppField>
 ```
 
-Field names drive default labels (`password` → "Password", `balanceMinor` → "Balance Minor"). Override with `label`, or pass `hideLabel` for visually hidden labels.
+Field names drive default labels (`password` → "Password", `balanceMajor` → "Balance Major"). Override with `label`, or pass `hideLabel` for visually hidden labels.
 
 ### 4. Validate at form level
 
-Keep Zod on `useAppForm`, not on the control:
+Keep Zod on `useAppForm` with **`onChange` only** — do not add an `onSubmit` validator:
 
 ```tsx
 const schema = z.object({
@@ -167,21 +168,22 @@ import { Search } from "lucide-react";
 
 ## Default values (`useXDefaultValues`)
 
-Extract `defaultValues` into a `use<Form>DefaultValues()` hook (see login/signup). use **both** `satisfies` and `as` for type safety. designed to accomodate all inputs - selects, dates etc:
+Extract `defaultValues` into a `use<Form>DefaultValues()` hook (see login/signup/cash-accounts). Use **both** `satisfies` and `as` for type safety:
 
 ```ts
 function useProfileDefaultValues() {
   return {
     email: "",
-    currency: undefined,
+    balanceMajor: undefined as unknown as number,
+    balanceAsOfDate: todayIsoDate(),
   } satisfies ProfileValues as ProfileValues;
 }
 ```
 
-- **`satisfies ProfileValues`** — checks the object against the schema type while keeping literal types (so `undefined` stays `undefined`, not a widened optional).
-- **`as ProfileValues`** — gives `useAppForm` the exact form value type; without it, TypeScript can collapse optional select fields incorrectly.
-
-For forms with **required** `z.number()` fields that start empty, use `FormValuesWithEmptyNumbers<ProfileValues>` instead of `ProfileValues` in the hook (see Number fields below).
+- **`satisfies ProfileValues`** — checks the object against the schema type while keeping literal types.
+- **`as ProfileValues`** — gives `useAppForm` the exact form value type; without it, TypeScript can collapse optional fields incorrectly.
+- **Empty required numbers** — use `undefined as unknown as number`, not plain `undefined` (breaks submit typing with required `z.number()`).
+- **Calendar date defaults** — use `todayIsoDate()` from `src/lib/date/iso-date.ts`, not `new Date().toISOString()`.
 
 Do not use `as` alone — that bypasses the structural check. Do not rely on `satisfies` alone when passing into `useAppForm` if you hit optional-field errors.
 
@@ -191,32 +193,31 @@ Registered as `field.SelectInput`. Backed by Combobox (`src/components/ui/combob
 
 ## Date fields (`DateInput`)
 
-Registered as `field.DateInput`. Form value is an ISO calendar date (`YYYY-MM-DD`) or `undefined` when empty — same shape for the control and Zod (`z.iso.date().optional()`). Display format follows the browser locale by default (`Intl` via `src/lib/form/date-display.ts`); pass `locale` to override. Typed digits follow **locale field order** (placeholder shows `DD/MM/YYYY` vs `MM/DD/YYYY`); eight digits that do not form a real calendar date clear on blur.
+Registered as `field.DateInput`. Form value is an ISO calendar date (`YYYY-MM-DD`) or `undefined` when empty — same shape for the control and Zod (`z.iso.date()`). Display format follows the browser locale by default (`Intl` via `src/lib/form/date-display.ts`); pass `locale` to override. Typed digits follow **locale field order** (placeholder shows `DD/MM/YYYY` vs `MM/DD/YYYY`); eight digits that do not form a real calendar date clear on blur.
 
 - **Typing:** locale placeholder; separator insertion while typing; commits ISO when 8 digits form a valid calendar date (including before blur); invalid blur clears field and sets `undefined`.
 - **Bounds (v1):** validate `min`/`max` in the form schema only; optional `min`/`max` props on the control are a follow-up.
 
-Default values: `dueDate: undefined` with `satisfies` + `as` on the form values type (see login/signup hooks).
+Default values: `balanceAsOfDate: todayIsoDate()` with `satisfies` + `as` on the form values type.
 
 ## Number fields (`NumberInput`)
 
 Registered as `field.NumberInput`. Form value is `number | undefined` when empty. Locale decimal separator comes from `Intl` via `src/lib/form/number-display.ts`; pass `locale` to override.
 
-Use required `z.number()` when the field must be filled on submit; use `z.number().optional()` when empty is valid output. Either way, default empty fields to `undefined` and type defaults with `FormValuesWithEmptyNumbers<z.infer<typeof schema>>` from `src/lib/form/form-values.ts`.
+Use required `z.number()` when the field must be filled on submit; use `z.number().optional()` when empty is valid output. Default empty required fields to `undefined as unknown as number` with `satisfies` + `as` on the form values type.
 
 - **Editing:** `type="text"`, `inputMode="decimal"` — no native spinner buttons. Digits insert at the caret on a fixed scale (`maximumFractionDigits`, default `0`). Pass `maximumFractionDigits` explicitly for decimals (e.g. `2`). The decimal separator is display-only (locale). Empty display is `""`; with scale `2`, first digit from empty at end (e.g. `1` → `0.01`); with scale `0`, first digit is a whole unit. Clear/backspace to empty → `undefined`; explicit `0` is a real value.
 - **Bounds (v1):** validate `min` / `max` in the form schema only — not on the control.
-
-Default values: `amount: undefined` with `satisfies` + `as` on `FormValuesWithEmptyNumbers<YourValues>` (not plain `z.infer` when any number field is required in Zod).
 
 **Out of scope v1:** thousands grouping, `min`/`max` on the control.
 
 ## Currency fields (`CurrencyInput`)
 
-Registered as `field.CurrencyInput`. Thin wrapper over `NumberInput` — same form value (`number | undefined`), same Zod and `FormValuesWithEmptyNumbers` rules as number fields.
+Registered as `field.CurrencyInput`. Thin wrapper over `NumberInput` — form value is **major units** (`number | undefined`), e.g. `1500.00` for R$1,500.00.
 
-- **Required:** `currency` — `CurrencyCode` from `src/lib/currency.ts` (`BRL`, `USD`). Display/typing context only; which currency an amount *means* comes from the form field / domain model, not from the stored value.
-- **Optional:** `locale` — browser default, then `pt-BR` (same as `DateInput` / `NumberInput`). Controls decimal separator; does not change the ISO currency code.
+- **Required:** `currency` — `CurrencyCode` from `src/lib/currency/currencies.ts` (`BRL`, `USD`). Display/typing context only.
+- **Naming:** use `balanceMajor` (or similar) in form schemas for money fields — DB persistence uses `balanceMinor`; convert at the serverFn boundary ([`feature-end-to-end.md`](./feature-end-to-end.md#persistence-conventions)).
+- **Optional:** `locale` — browser default, then `pt-BR` (same as `DateInput` / `NumberInput`).
 - **Customization:** fraction digits, extra addons, or non-money decimals → use `field.NumberInput` directly.
 
 **Out of scope v1:** thousands grouping, `min`/`max` on the control, storing `CurrencyCode` in the form value.
@@ -226,7 +227,8 @@ Registered as `field.CurrencyInput`. Thin wrapper over `NumberInput` — same fo
 - [ ] Control implements `FieldControlProps<TValue>` and stays free of TanStack imports
 - [ ] String controls delegate to `StringInput`; other shapes compose `controlShellVariants` / `controlInnerVariants`
 - [ ] Wrapped with `fieldInputWrapper` and registered in `fieldComponents`
-- [ ] Form-level schema covers the field; no schema metadata used for labels
+- [ ] Form-level schema covers the field; validators use `onChange` only
+- [ ] Empty required numbers use `undefined as unknown as number` in default values hooks
 - [ ] Addon buttons use `variant: "action"` (with `ariaLabel`), not raw `ReactNode`
 - [ ] Slot ownership is explicit — omit a slot from public props when the control owns it (e.g. `PasswordInput.rightAddon`)
 - [ ] This guide updated if steps or contracts changed
@@ -239,3 +241,4 @@ Registered as `field.CurrencyInput`. Thin wrapper over `NumberInput` — same fo
 - Do not branch on `leftAddon` / `rightAddon` inside each string control — let `StringInput` own that.
 - Do not render an `InputGroupButton` inside a raw `ReactNode` addon when `variant: "action"` would do; raw nodes bypass shared button styling.
 - Do not add form UI how-tos to `CONTEXT.md` — that file is domain glossary only.
+- Do not add `validators.onSubmit` — `onChange` only.

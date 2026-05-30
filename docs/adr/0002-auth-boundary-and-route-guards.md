@@ -35,7 +35,7 @@ Guards run in **layout route components**, not `beforeLoad` loader data:
 
 Both layouts call `useAuth()`, which uses `useSuspenseQuery(sessionQueryOptions())`. TanStack Start provides a Suspense ancestor for route trees by default.
 
-**Server-side enforcement** for protected domain operations will use `authMiddleware` on serverFns once implemented ([ADR-0003 follow-up](./0003-server-functions-and-data-fetching.md#follow-up)). Layout guards are not a substitute.
+**Server-side enforcement** for protected domain operations uses `authMiddleware` on serverFns ([ADR-0003](./0003-server-functions-and-data-fetching.md#protection--authmiddleware)). Layout guards are not a substitute.
 
 ### Route topology
 
@@ -57,10 +57,6 @@ Both layouts call `useAuth()`, which uses `useSuspenseQuery(sessionQueryOptions(
 - Auth logic is centralized and easier to evolve without touching route internals.
 - Guard behavior is consistent on server render and client navigation through shared session query subscription.
 - Domain features follow [ADR-0003](./0003-server-functions-and-data-fetching.md); auth remains the single transport exception for mutations.
-
-## Follow-up
-
-- **`authMiddleware`** on protected serverFns — planned usage in [`auth-patterns.md`](../guides/auth-patterns.md#protected-serverfns--authmiddleware-planned); implementation details in [ADR-0003](./0003-server-functions-and-data-fetching.md#follow-up).
 
 ## Keeping this ADR current
 

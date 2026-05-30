@@ -2,7 +2,9 @@
 
 How to add a domain query, mutation, and route using the patterns in [ADR-0003](../adr/0003-server-functions-and-data-fetching.md).
 
-The walkthrough below uses a **hypothetical `income` feature** (not implemented yet) so the steps stay copy-pasteable. **Live code** today is under `src/features/auth/` — cross-link there for guards and forms; auth differs only where it calls `authClient` instead of `createServerFn` ([ADR-0002](../adr/0002-auth-boundary-and-route-guards.md)).
+**Live reference:** `src/features/cash-accounts/` and `src/routes/app/cash-accounts/`. Auth differs where it calls `authClient` instead of `createServerFn` ([ADR-0002](../adr/0002-auth-boundary-and-route-guards.md), [`auth-patterns.md`](./auth-patterns.md)).
+
+Import paths: [`project-layout.md`](./project-layout.md). Database tables: [ADR-0004](../adr/0004-database-schema-layout.md).
 
 ## Keep this guide current
 
@@ -11,145 +13,172 @@ When you add or change query/mutation factories, loader prefetch rules, route `-
 ## Prerequisites
 
 - Envelope helpers: `src/lib/server-fn/create-success-response.ts`, `src/lib/errors/app-error.ts`
+- Auth: `src/lib/server-fn/auth-middleware.ts`, `src/lib/errors/app-unauthenticated-error.ts`
 - Query wrappers: `src/lib/query/app-query-fn.ts`, `src/lib/query/app-mutation-fn.ts`, `src/lib/query/invalidate-on-success.ts`
+- RPC typing: `src/lib/server-fn/response-data.ts` (`AppServerFnResult`)
 - Forms: [ADR-0001](../adr/0001-form-input-architecture.md), [`adding-form-fields.md`](./adding-form-fields.md)
-- Live session query reference: `src/features/auth/queries/session-query-options.ts`
+- Session query (unauthenticated): `src/features/auth/queries/session-query-options.ts`
 
 ## Feature module checklist
 
 | Path | Exports | Stays private |
 |------|---------|---------------|
-| `queries/income-list-query-options.ts` | `incomeListQueryOptions()` | `getIncomeListServerFn` |
-| `mutations/create-income-source-mutation-options.ts` | `createIncomeSourceMutationOptions()` | `createIncomeSourceServerFn` |
-| `schemas/create-income-source-form-schema.ts` | `createIncomeSourceFormSchema`, `CreateIncomeSourceFormValues` | — |
-| `lib/` (optional) | shared helper — only when reused across multiple modules | — |
+| `queries/cash-account-list-query-options.ts` | `cashAccountListQueryOptions()`, `CashAccountListItem` | `getCashAccountListServerFn` |
+| `mutations/create-cash-account-mutation-options.ts` | `createCashAccountMutationOptions()` | `createCashAccountServerFn` |
+| `mutations/update-cash-account-mutation-options.ts` | `updateCashAccountMutationOptions()` | `updateCashAccountServerFn` |
+| `schemas/create-cash-account-form-schema.ts` | `createCashAccountFormSchema`, `CreateCashAccountFormValues` | — |
+| `lib/cash-account-errors.ts` | `ExistingCashAccountError`, … | — |
+| `lib/get-first-cash-account.ts` | `getFirstCashAccount` | — |
 
-**Rule:** filename stem matches the exported symbol (`income-list-query-options.ts` → `incomeListQueryOptions`).
+**Rule:** filename stem matches the exported symbol (`cash-account-list-query-options.ts` → `cashAccountListQueryOptions`).
 
 ---
 
 ## 1. Query — list data (GET serverFn)
 
-### No input
+When the serverFn needs **no client input**, omit `.inputValidator`. Apply **`authMiddleware`** when the data belongs to the authenticated user.
 
-When the serverFn needs **no client input**, omit `.inputValidator` entirely. **Live reference:** `src/features/auth/queries/session-query-options.ts`.
+**File:** `src/features/cash-accounts/queries/cash-account-list-query-options.ts`
 
-```ts
-const getSessionServerFn = createServerFn({ method: "GET" }).handler(async () => {
-  return createSuccessResponse({ data: result });
-});
-
-export function sessionQueryOptions() {
-  return queryOptions({
-    queryKey: ["auth", "session"],
-    queryFn: appQueryFn(() => getSessionServerFn()),
-  });
-}
-```
-
-Do not add `z.object({})` or pass `{}` just to unify factory signatures — that is unnecessary when there is nothing to validate or send.
-
-### With input
-
-When the serverFn **does** accept input, define a schema, derive the input type, and pass the **same object** to `queryKey` and `getXServerFn({ data: input })`.
-
-**File:** `src/features/income/queries/income-list-query-options.ts`
-
-Returns **only what the list UI needs** (RPC shape — not a REST “full row”).
+Returns **only what the list UI needs** (RPC shape — not a REST “full row”). Convert persisted values at the handler boundary (see [Persistence conventions](#persistence-conventions)).
 
 ```ts
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
+import { db } from "#/db";
+import { fromMinorUnits } from "#/lib/currency/minor-units";
 import { appQueryFn } from "#/lib/query/app-query-fn";
+import { authMiddleware } from "#/lib/server-fn/auth-middleware";
 import { createSuccessResponse } from "#/lib/server-fn/create-success-response";
+import type { AppServerFnResult } from "#/lib/server-fn/response-data";
 
-const incomeListInputSchema = z.object({
-  month: z.string().optional(),
-});
+const getCashAccountListServerFn = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context: { user } }) => {
+    const rows = await db.query.cashAccount.findMany({
+      where: { userId: user.id },
+      columns: { id: true, name: true, balanceMinor: true, balanceAsOfDate: true },
+      orderBy: { createdAt: "asc" },
+    });
 
-type IncomeListInput = z.infer<typeof incomeListInputSchema>;
-
-const getIncomeListServerFn = createServerFn({ method: "GET" })
-  .inputValidator(incomeListInputSchema)
-  // .middleware([authMiddleware]) — planned; enforce session in handler until then
-  .handler(async ({ data }) => {
-    const items = await db.select(/* … */); // inline handler logic is fine
-    return createSuccessResponse({ data: items });
+    return createSuccessResponse({
+      data: rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        balanceMajor: fromMinorUnits(row.balanceMinor),
+        balanceAsOfDate: row.balanceAsOfDate,
+      })),
+    });
   });
 
-export function incomeListQueryOptions(input: IncomeListInput) {
+export type CashAccountListItem = AppServerFnResult<
+  typeof getCashAccountListServerFn
+>[number];
+
+export function cashAccountListQueryOptions() {
   return queryOptions({
-    queryKey: ["income", "list", input],
-    queryFn: appQueryFn(() => getIncomeListServerFn({ data: input })),
+    queryKey: ["cash-accounts", "list"],
+    queryFn: appQueryFn(getCashAccountListServerFn),
   });
 }
 ```
 
 **Notes**
 
-- Derive `IncomeListInput` from the serverFn `inputValidator` schema and pass the **same object** to `queryKey` and `getIncomeListServerFn({ data: input })` — never maintain separate key/input shapes.
+- Derive list item types with `AppServerFnResult<typeof getXServerFn>[number]` — do not maintain a separate manual RPC type.
+- Pass the serverFn directly to `appQueryFn(getXServerFn)` for no-input GETs.
 - No `message` on success → no success toast.
-- Throw `new AppError({ message: "…" })` inside the handler for expected failures; `appQueryFn` toasts the message.
+- Throw feature error subclasses or `AppError` for expected failures; `appQueryFn` toasts the message.
+- Empty list `[]` is a normal state — not an error.
 - **`zodValidator`** is for route `validateSearch` only — serverFns use `.inputValidator(zodSchema)` directly.
 
 ---
 
 ## 2. Mutation — form submit (POST serverFn)
 
-**Schema:** `src/features/income/schemas/create-income-source-form-schema.ts`
+**Schema:** `src/features/cash-accounts/schemas/create-cash-account-form-schema.ts`
+
+Form fields use **client naming** (`balanceMajor`). DB columns use **server naming** (`balanceMinor`).
 
 ```ts
 import { z } from "zod";
 
-export const createIncomeSourceFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+export const createCashAccountFormSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(120, "Name is too long"),
+  balanceMajor: z.number({ error: "Balance must be a number" }).min(0, "Balance must be zero or greater"),
+  balanceAsOfDate: z.iso.date("Date must be in YYYY-MM-DD format"),
 });
 
-export type CreateIncomeSourceFormValues = z.infer<typeof createIncomeSourceFormSchema>;
+export type CreateCashAccountFormValues = z.infer<typeof createCashAccountFormSchema>;
 ```
 
-**Mutation module:** `src/features/income/mutations/create-income-source-mutation-options.ts`
+**Errors:** `src/features/cash-accounts/lib/cash-account-errors.ts`
+
+```ts
+import { AppError } from "#/lib/errors/app-error";
+
+export class ExistingCashAccountError extends AppError {
+  constructor() {
+    super({ message: "You already have a cash account" });
+  }
+}
+```
+
+**Mutation module:** `src/features/cash-accounts/mutations/create-cash-account-mutation-options.ts`
 
 ```ts
 import { mutationOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { createIncomeSourceFormSchema } from "#/features/income/schemas/create-income-source-form-schema";
+import { db } from "#/db";
+import { cashAccount } from "#/db/schemas";
+import { toMinorUnits } from "#/lib/currency/minor-units";
 import { appMutationFn } from "#/lib/query/app-mutation-fn";
-import { AppError } from "#/lib/errors/app-error";
+import { invalidateOnSuccess } from "#/lib/query/invalidate-on-success";
+import { authMiddleware } from "#/lib/server-fn/auth-middleware";
 import { createSuccessResponse } from "#/lib/server-fn/create-success-response";
-import { incomeListQueryOptions } from "../queries/income-list-query-options";
+import { ExistingCashAccountError } from "../lib/cash-account-errors";
+import { getFirstCashAccount } from "../lib/get-first-cash-account";
+import { cashAccountListQueryOptions } from "../queries/cash-account-list-query-options";
+import { createCashAccountFormSchema } from "../schemas/create-cash-account-form-schema";
 
-const createIncomeSourceInputSchema = z.object({
-  formData: createIncomeSourceFormSchema,
+const createCashAccountMutationInputSchema = z.object({
+  formData: createCashAccountFormSchema,
 });
 
-const createIncomeSourceServerFn = createServerFn({ method: "POST" })
-  .inputValidator(createIncomeSourceInputSchema)
-  .handler(async ({ data }) => {
-    const exists = await db.query.incomeSources.findFirst({
-      where: { name: data.formData.name },
-    });
-    if (exists) {
-      throw new AppError({ message: "An income source with this name already exists" });
+const createCashAccountServerFn = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .inputValidator(createCashAccountMutationInputSchema)
+  .handler(async ({ data, context: { user } }) => {
+    if (await getFirstCashAccount(user.id)) {
+      throw new ExistingCashAccountError();
     }
-    await db.insert(incomeSources).values(data.formData);
-    return createSuccessResponse({ message: "Income source created" });
+
+    await db.insert(cashAccount).values({
+      userId: user.id,
+      name: data.formData.name,
+      balanceMinor: toMinorUnits(data.formData.balanceMajor),
+      balanceAsOfDate: data.formData.balanceAsOfDate,
+    });
+
+    return createSuccessResponse({ message: "Cash account created" });
   });
 
-export function createIncomeSourceMutationOptions() {
+export function createCashAccountMutationOptions() {
   return mutationOptions({
-    mutationFn: appMutationFn((input) => createIncomeSourceServerFn({ data: input })),
+    mutationFn: appMutationFn(createCashAccountServerFn),
     onSuccess: async (...args) => {
-      // Prefix — list query keys include input variants (e.g. { month })
-      await args[3].client.invalidateQueries({ queryKey: ["income", "list"] });
+      await invalidateOnSuccess(args, cashAccountListQueryOptions().queryKey);
     },
   });
 }
 ```
 
-Extract `src/features/income/lib/` helpers **only when** the same logic is reused across multiple query/mutation modules — not by default.
+- Pass the serverFn **directly** to `appMutationFn` — no wrapper function unless pre-RPC client logic is needed.
+- Do **not** set `mutationKey` — invalidate via `invalidateOnSuccess` only.
+- Update mutations follow the same pattern with `{ cashAccountId, formData }` input.
+
+Extract `src/features/{feature}/lib/` helpers **only when** reused across multiple query/mutation modules.
 
 **Non-form mutation:** use a flat input schema (no `formData` wrapper) when the action is not tied to a form schema.
 
@@ -157,104 +186,89 @@ Extract `src/features/income/lib/` helpers **only when** the same logic is reuse
 
 ## 3. Route — page + loader prefetch + subscribe
 
-**Page route:** `src/routes/app/incomes/index.tsx`
+**Page route:** `src/routes/app/cash-accounts/index.tsx`
 
 ```tsx
-import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { incomeListQueryOptions } from "#/features/income/queries/income-list-query-options";
-import { IncomeList } from "./-lib/income-list";
+import { createFileRoute } from "@tanstack/react-router";
+import { cashAccountListQueryOptions } from "#/features/cash-accounts/queries/cash-account-list-query-options";
 
-export const Route = createFileRoute("/app/incomes/")({
-  loader: ({ context: { queryClient } }) =>
-    queryClient.ensureQueryData(incomeListQueryOptions({})), // no month filter — see §6 for search-driven input
-  component: IncomesPage,
+export const Route = createFileRoute("/app/cash-accounts/")({
+  loader: ({ context: { queryClient } }) => {
+    queryClient.ensureQueryData(cashAccountListQueryOptions());
+  },
+  component: CashAccountsPage,
 });
 
-function IncomesPage() {
-  const { data: items } = useSuspenseQuery(incomeListQueryOptions({}));
-
-  return (
-    <main>
-      <h1>Income sources</h1>
-      <IncomeList items={items} />
-    </main>
-  );
+function CashAccountsPage() {
+  const { data: cashAccounts } = useSuspenseQuery(cashAccountListQueryOptions());
+  // render list from cashAccounts …
 }
 ```
 
 **Critical — loader vs hook**
 
 - `loader` → `ensureQueryData` **starts** the fetch; it is **not** a subscriber.
-- `useSuspenseQuery(incomeListQueryOptions(input))` → **live** cache subscription; stays fresh after `invalidateOnSuccess`.
+- `useSuspenseQuery(cashAccountListQueryOptions())` → **live** cache subscription; stays fresh after `invalidateOnSuccess`.
 - **Never** render list data from `Route.useLoaderData()` for query-backed UI.
 
 TanStack Start wraps routes in Suspense by default, so primary `useSuspenseQuery` usage works without adding a local boundary. Skeleton pending UI is planned later.
-
-**Optional route hook:** `src/routes/app/incomes/-lib/use-income-list.ts`
-
-```ts
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { incomeListQueryOptions } from "#/features/income/queries/income-list-query-options";
-
-export function useIncomeList(input: IncomeListInput) {
-  return useSuspenseQuery(incomeListQueryOptions(input));
-}
-```
-
-Use when the page composes multiple child components that share the same subscription.
 
 ---
 
 ## 4. Secondary data — `useQuery` (edit panel)
 
-Data the user does not need to see immediately (e.g. one income source for an edit drawer) uses **`useQuery`**, not suspense, with local pending/error UI:
+Data the user does not need to see immediately uses **`useQuery`**, not suspense, with local pending/error UI:
 
 ```tsx
 import { useQuery } from "@tanstack/react-query";
-import { incomeSourceQueryOptions } from "#/features/income/queries/income-source-query-options";
+import { cashAccountQueryOptions } from "#/features/cash-accounts/queries/cash-account-query-options";
 
-function EditIncomeSourcePanel({ id }: { id: string }) {
-  const { data, isPending, isError } = useQuery(incomeSourceQueryOptions(id));
+function EditCashAccountPanel({ id }: { id: string }) {
+  const { data, isPending, isError } = useQuery(cashAccountQueryOptions(id));
 
   if (isPending) return <p>Loading…</p>;
-  if (isError) return <p>Could not load income source.</p>;
+  if (isError) return <p>Could not load cash account.</p>;
 
-  return <EditIncomeSourceForm initial={data} />;
+  return <EditCashAccountForm editData={data} />;
 }
 ```
 
-Define `income-source-query-options.ts` the same way as the list query — private GET serverFn, RPC-shaped `data`, `appQueryFn` in the factory.
+Define detail query modules the same way as the list query — private GET serverFn, `authMiddleware`, RPC-shaped `data`, `appQueryFn` in the factory.
 
 ---
 
 ## 5. Form in route `-lib`
 
-**File:** `src/routes/app/incomes/-lib/create-income-source-form.tsx`
+**File:** `src/routes/app/cash-accounts/-lib/create-cash-account-form.tsx`
 
 ```tsx
 import { useMutation } from "@tanstack/react-query";
-import { createIncomeSourceMutationOptions } from "#/features/income/mutations/create-income-source-mutation-options";
+import { createCashAccountMutationOptions } from "#/features/cash-accounts/mutations/create-cash-account-mutation-options";
 import {
-  type CreateIncomeSourceFormValues,
-  createIncomeSourceFormSchema,
-} from "#/features/income/schemas/create-income-source-form-schema";
+  type CreateCashAccountFormValues,
+  createCashAccountFormSchema,
+} from "#/features/cash-accounts/schemas/create-cash-account-form-schema";
+import { todayIsoDate } from "#/lib/date/iso-date";
 import { useAppForm } from "#/lib/form/create-app-form";
 
-function useCreateIncomeSourceFormDefaultValues() {
-  return { name: "" } satisfies CreateIncomeSourceFormValues as CreateIncomeSourceFormValues;
+function useCreateCashAccountFormDefaultValues() {
+  return {
+    name: "",
+    balanceMajor: undefined as unknown as number,
+    balanceAsOfDate: todayIsoDate(),
+  } satisfies CreateCashAccountFormValues as CreateCashAccountFormValues;
 }
 
-export function CreateIncomeSourceForm() {
-  const mutation = useMutation(createIncomeSourceMutationOptions());
-  const defaultValues = useCreateIncomeSourceFormDefaultValues();
+export function CreateCashAccountForm() {
+  const mutation = useMutation(createCashAccountMutationOptions());
+  const defaultValues = useCreateCashAccountFormDefaultValues();
 
   const form = useAppForm({
     defaultValues,
-    validators: { onChange: createIncomeSourceFormSchema },
+    validators: { onChange: createCashAccountFormSchema },
     onSubmit: async ({ value }) => {
-      await mutation.mutateAsync({ formData: value });
-      form.reset();
+      await mutation.mutateAsync({ data: { formData: value } });
     },
   });
 
@@ -263,52 +277,39 @@ export function CreateIncomeSourceForm() {
       <form.AppField name="name">
         {(field) => <field.TextInput />}
       </form.AppField>
-      {/* SubmitButton pattern — see ADR-0001 follow-up */}
+      <form.AppField name="balanceMajor">
+        {(field) => <field.CurrencyInput label="Balance" currency="BRL" />}
+      </form.AppField>
+      <form.AppField name="balanceAsOfDate">
+        {(field) => <field.DateInput label="Balance as of date" />}
+      </form.AppField>
     </form>
   );
 }
 ```
 
-- Client validation → form schema on `useAppForm`.
-- Server/business failures → thrown `AppError` → toast via `appMutationFn`; no inline server error state.
-- If `mutateAsync` throws, code after it (e.g. `navigate`) does not run.
+- Client validation → form schema on `useAppForm` with **`onChange` only**.
+- Empty required numbers → `undefined as unknown as number` in default values (see [`adding-form-fields.md`](./adding-form-fields.md)).
+- Domain mutation call shape → `mutateAsync({ data: { formData: value } })`.
+- Server/business failures → thrown errors → toast via `appMutationFn`; no inline server error state.
 
 ---
 
 ## 6. Search params (when needed)
 
-Define the search schema on the route file with `zodValidator` (the **only** place we use `zodValidator`). Wire search into the loader via **`loaderDeps`** — `validateSearch` already parsed search; do not re-parse in the loader.
-
-Map search fields to the query factory's **`IncomeListInput`** so loader, hook, and serverFn stay aligned:
+Define the search schema on the route file with `zodValidator` (the **only** place we use `zodValidator`). Wire search into the loader via **`loaderDeps`**.
 
 ```tsx
-import { createFileRoute } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { zodValidator } from "@tanstack/zod-adapter";
-import { z } from "zod";
-import { incomeListQueryOptions } from "#/features/income/queries/income-list-query-options";
-
-const incomesSearchSchema = z.object({
-  month: z.string().optional(),
-});
-
-export const Route = createFileRoute("/app/incomes/")({
-  validateSearch: zodValidator(incomesSearchSchema),
+export const Route = createFileRoute("/app/example/")({
+  validateSearch: zodValidator(searchSchema),
   loaderDeps: ({ search: { month } }) => ({ month }),
   loader: ({ context: { queryClient }, deps }) =>
-    queryClient.ensureQueryData(incomeListQueryOptions(deps)),
-  component: IncomesPage,
+    queryClient.ensureQueryData(exampleListQueryOptions(deps)),
+  component: ExamplePage,
 });
-
-function IncomesPage() {
-  const { month } = Route.useSearch();
-  const { data: items } = useSuspenseQuery(incomeListQueryOptions({ month }));
-
-  return (/* … */);
-}
 ```
 
-`loaderDeps` declares which search fields trigger a loader re-run; `deps` in the loader is already typed from validated search — no `schema.parse(location.search)`.
+`loaderDeps` declares which search fields trigger a loader re-run; `deps` in the loader is already typed from validated search.
 
 ---
 
@@ -316,12 +317,41 @@ function IncomesPage() {
 
 | Concern | Domain (this guide) | Auth ([`auth-patterns.md`](./auth-patterns.md)) |
 |---------|----------------------|--------------------------------------------------|
-| Server boundary | `createServerFn` | `authClient` for login/signup/logout |
-| Session read | — | `sessionQueryOptions` + private GET serverFn |
-| Mutation wrappers | `appMutationFn` | Same |
-| Form input shape | `{ formData: formSchema }` | Same |
+| Server boundary | `createServerFn` + `authMiddleware` | `authClient` for login/signup/logout |
+| Session read | — | `sessionQueryOptions` (no middleware) |
+| Mutation wiring | `appMutationFn(serverFn)` direct | Thin wrapper + `authClient` |
+| Form call shape | `mutateAsync({ data: { formData } })` | `mutateAsync({ formData })` |
 | Invalidation | `invalidateOnSuccess(..., queryOptions().queryKey)` | Invalidates `sessionQueryOptions().queryKey` |
 | Route guards | — | Layout `useAuth()` in `_auth` / `app` route groups |
+
+---
+
+## Persistence conventions
+
+### Money — `balanceMajor` / `balanceMinor`
+
+| Layer | Field | Units | Example |
+|-------|-------|-------|---------|
+| Form schema / RPC | `balanceMajor` | major (what user types) | `1500.00` |
+| DB / Drizzle | `balanceMinor` | integer minor units | `150000` |
+
+- **Client never sees minor units** — list/detail RPCs return `balanceMajor`.
+- **Conversion only** in `src/lib/currency/minor-units.ts`:
+  - `toMinorUnits(major)` — mutation handlers before write
+  - `fromMinorUnits(minor)` — query handlers before `createSuccessResponse`
+- **Never scatter `* 100` or `/ 100`** outside that module.
+- v1 assumes 2-decimal currencies (BRL/USD). Comment in `minor-units.ts` when extending.
+- `formatCurrency(amountMajor, …)` in `src/lib/currency/format-currency.ts` takes **major** units.
+- Forms use `field.CurrencyInput` with `balanceMajor` — user enters `1500.00`, not `150000`.
+
+**MAYBE follow-up:** generic mapper over `{ balanceMinor }` objects/arrays with inferred `{ balanceMajor }` return when many handlers repeat the same map.
+
+### Dates — ISO `YYYY-MM-DD`
+
+- Store and transport calendar dates as ISO date strings (`YYYY-MM-DD`) — never full datetimes for persisted dates.
+- `toIsoDate(date)` → `date.toISOString().slice(0, 10)` in `src/lib/date/iso-date.ts`
+- `todayIsoDate()` → `toIsoDate(new Date())`
+- Do not use raw `new Date().toISOString()` for form defaults or DB values.
 
 ---
 
@@ -329,11 +359,13 @@ function IncomesPage() {
 
 - [ ] Feature files export factories/schemas only; serverFns are module-private
 - [ ] Filename stem matches exported factory name
-- [ ] No-input serverFns: omit `.inputValidator`; factory has no input param (see `sessionQueryOptions`)
-- [ ] With-input serverFns: schema + inferred type; same object drives `queryKey` and `serverFn({ data })`
-- [ ] Form mutations: `formData` wrapper only when tied to a form schema
-- [ ] Success via `createSuccessResponse`; failures via thrown `AppError`
-- [ ] `appQueryFn` / `appMutationFn` on all domain option factories
+- [ ] Protected serverFns use `.middleware([authMiddleware])`
+- [ ] No-input serverFns: omit `.inputValidator`; pass serverFn directly to `appQueryFn`
+- [ ] Domain mutations: `appMutationFn(serverFn)` direct; no `mutationKey`
+- [ ] Form mutations: `mutateAsync({ data: { formData } })`; auth uses `{ formData }` only
+- [ ] RPC types via `AppServerFnResult<typeof getXServerFn>`
+- [ ] Money converted at serverFn boundary only (`toMinorUnits` / `fromMinorUnits`)
+- [ ] Success via `createSuccessResponse`; failures via thrown `AppError` subclasses or inline `AppError`
 - [ ] Route at `.../page-name/index.tsx`; forms/helpers in `-lib/`
 - [ ] Loader uses `ensureQueryData` only; page subscribes with `useSuspenseQuery` / `useQuery`
 - [ ] Never render query-backed UI from `useLoaderData`
@@ -343,10 +375,12 @@ function IncomesPage() {
 
 - Do not shape GET responses like REST collections “just in case” — return what the UI context needs.
 - Do not export `createServerFn` handlers from feature modules.
-- Do not duplicate query keys for invalidation — use `someQueryOptions(input).queryKey` or a shared prefix when multiple inputs exist.
-- Do not re-parse search in loaders — use `loaderDeps` + validated `deps`.
+- Do not skip `authMiddleware` on protected serverFns because layout guards exist.
+- Do not duplicate query keys for invalidation — use `someQueryOptions().queryKey`.
+- Do not scatter minor-unit conversion outside `minor-units.ts`.
 - Do not use `zodValidator` on serverFn `.inputValidator` — route `validateSearch` only.
-- Do not use `z.object({})` or `{}` to fake a no-input serverFn — omit `.inputValidator` instead (see `sessionQueryOptions`).
+- Do not use `z.object({})` or `{}` to fake a no-input serverFn — omit `.inputValidator` instead.
 - Do not treat loader output as invalidation-safe data.
-- Do not add inline server error banners — toast via `AppError` and let the user retry.
+- Do not add inline server error banners — toast via thrown errors.
 - Do not call `authClient` from routes — use auth mutation factories ([ADR-0002](../adr/0002-auth-boundary-and-route-guards.md)).
+- Do not run `tools/clear-db.ts` from agents — dev-only, human decision ([ADR-0004](../adr/0004-database-schema-layout.md)).

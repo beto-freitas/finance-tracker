@@ -32,10 +32,10 @@ useAppForm / form.AppField
 | Addon contract | `src/components/form/input-addon.tsx` | `InputAddon` discriminated union + `renderInputAddon` |
 | Shared chrome | `src/components/form/control-variants.ts` | `controlShellVariants` (bar) + `controlInnerVariants` (text) |
 | Bar primitives | `src/components/ui/input.tsx`, `src/components/ui/input-group.tsx` | Bare `<Input>` and the grouped `InputGroup` shell |
-| Icon alias | `src/types/icon.ts` | `Icon = LucideIcon` — swap libraries in one place |
+| Icon alias | `src/lib/utils.ts` | `Icon = LucideIcon` — swap libraries in one place |
 | Number display helpers | `src/lib/form/number-display.ts` | Locale decimal separator; caret-aware digit buffer; paste/step — no TanStack/DOM |
 | Currency display helpers | `src/lib/form/currency-display.ts` | `Intl` symbol, addon side, fraction digits for `CurrencyCode` — no TanStack/DOM |
-| Currency codes | `src/lib/currency.ts` | `SUPPORTED_CURRENCIES`, `CurrencyCode`, labels for selects |
+| Currency codes | `src/lib/currency/currencies.ts` | `SUPPORTED_CURRENCIES`, `CurrencyCode`, labels for selects |
 
 **Rejected alternative:** a single smart field component that owns both TanStack wiring and rendering. Splitting wrapper (binding) from control (value bridging) from shell (markup) keeps new input types small and testable.
 
@@ -43,7 +43,7 @@ useAppForm / form.AppField
 
 ## Validation
 
-- Schema lives on `useAppForm` via `validators` (e.g. `{ onChange: schema }`).
+- Schema lives on `useAppForm` via `validators: { onChange: schema }` only — no `onSubmit` validator.
 - Zod satisfies TanStack's Standard Schema adapter — no per-field schema registration.
 - Labels are **not** read from schema metadata; use the `label` prop or the field-name heuristic.
 

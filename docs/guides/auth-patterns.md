@@ -2,11 +2,11 @@
 
 Practical guide for implementing auth routes and auth-related data flows under [ADR-0002](../adr/0002-auth-boundary-and-route-guards.md).
 
-General serverFn, loader, and page conventions: [ADR-0003](../adr/0003-server-functions-and-data-fetching.md) and [`feature-end-to-end.md`](./feature-end-to-end.md).
+General serverFn, loader, and page conventions: [ADR-0003](../adr/0003-server-functions-and-data-fetching.md) and [`feature-end-to-end.md`](./feature-end-to-end.md). Import paths: [`project-layout.md`](./project-layout.md).
 
 ## Keep this guide current
 
-When auth route topology, auth mutation call path, session query strategy, toast behavior, or **`authMiddleware`** changes, update this guide and [ADR-0002](../adr/0002-auth-boundary-and-route-guards.md) in the same PR.
+When auth route topology, auth mutation call path, session query strategy, toast behavior, or `authMiddleware` changes, update this guide and [ADR-0002](../adr/0002-auth-boundary-and-route-guards.md) in the same PR.
 
 ## Core rules
 
@@ -25,8 +25,16 @@ When auth route topology, auth mutation call path, session query strategy, toast
   - `src/features/auth/mutations/login-mutation-options.ts`
   - `src/features/auth/mutations/signup-mutation-options.ts`
   - `src/features/auth/mutations/logout-mutation-options.ts`
+- Session primitive:
+  - `src/features/auth/lib/get-auth-session.ts` (`getAuthSessionServerFn`)
 - Session query:
   - `src/features/auth/queries/session-query-options.ts`
+- Auth server/client:
+  - `src/lib/auth/auth-server.ts` (`authServer`)
+  - `src/lib/auth/auth-client.ts` (`authClient`)
+- Middleware:
+  - `src/lib/server-fn/auth-middleware.ts`
+  - `src/lib/errors/app-unauthenticated-error.ts`
 - Session hook:
   - `src/lib/hooks/use-auth.ts`
 - Guards:
@@ -40,19 +48,23 @@ When auth route topology, auth mutation call path, session query strategy, toast
   - `/signup` (`src/routes/_auth/signup/index.tsx`, form in `-lib/signup-form.tsx`)
 - Protected routes:
   - `/app/dashboard` (`src/routes/app/dashboard/index.tsx`)
+  - `/app/cash-accounts` (`src/routes/app/cash-accounts/index.tsx`)
 
 Login search params (`redirect`) are defined on the login route with `zodValidator`.
 
-## Form + mutation pattern
+## Form + mutation pattern (auth exception)
+
+Auth mutations use **`authClient`**, not `createServerFn`. They still use `appMutationFn`, `createSuccessResponse`, and `invalidateOnSuccess`.
 
 1. Define form schema in `src/features/auth/schemas/`.
-2. Build route-local form component under `-lib/` with `useAppForm` and `useXFormDefaultValues()` returning `{ … } satisfies XFormValues`.
+2. Build route-local form component under `-lib/` with `useAppForm` and `useXFormDefaultValues()` returning `{ … } satisfies XFormValues as XFormValues`.
 3. In the form component:
    - `useMutation(loginMutationOptions())` (or signup/logout factory)
-   - `await mutateAsync({ formData: value })` from `onSubmit`
+   - **`await mutateAsync({ formData: value })`** from `onSubmit` — **not** `{ data: { formData } }` (that shape is for domain serverFns only)
    - on success, navigate (e.g. `/app/dashboard` or `search.redirect`)
 4. On success, mutation options invalidate `sessionQueryOptions().queryKey` via `invalidateOnSuccess`.
-5. On failure, `mutateAsync` throws; `appMutationFn` toasts the message — no extra catch UI unless you need to reset form state.
+5. Do **not** set `mutationKey` on auth mutations — invalidate explicitly only.
+6. On failure, `mutateAsync` throws; `appMutationFn` toasts the message.
 
 Live references: `src/routes/_auth/login/-lib/login-form.tsx`, `src/features/auth/mutations/login-mutation-options.ts`.
 
@@ -67,32 +79,38 @@ Session subscription uses the same `sessionQueryOptions()` factory as everywhere
 
 Layout guards are **UX-only**. They do not replace server-side auth on protected handlers.
 
-## Protected serverFns — `authMiddleware` (planned)
+## Protected serverFns — `authMiddleware`
 
-Domain GET/POST serverFns under `/app/*` must enforce a valid session on the server, not rely on the client redirect.
-
-**Planned pattern** (not implemented yet):
+Domain GET/POST serverFns that read or write authenticated user data **must** use `authMiddleware`. RPCs remain callable via direct HTTP requests even when the UI redirects unauthenticated users.
 
 ```ts
-const getIncomeListServerFn = createServerFn({ method: "GET" })
+import { authMiddleware } from "#/lib/server-fn/auth-middleware";
+
+const getCashAccountListServerFn = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
-  .inputValidator(incomeListInputSchema)
-  .handler(async ({ data }) => {
-    // session already verified by middleware
+  .handler(async ({ context: { user } }) => {
+    // user already verified — do not call getSession again here
     return createSuccessResponse({ data: items });
   });
 ```
 
-- `authMiddleware` will reject unauthenticated calls before the handler runs (throw `AppError` or equivalent → toast on client).
+- Missing session → `AppUnauthenticatedError` → toast on client.
 - Apply to **every protected serverFn**, including GET reads — same bar as mutations.
-- Session read (`getSessionServerFn`) stays unauthenticated middleware-wise; it only reports whether a session exists.
-- When the middleware PR lands, update this section and [ADR-0003](../adr/0003-server-functions-and-data-fetching.md) with the final API and file path.
+- **`getAuthSessionServerFn`** is the shared session primitive (used by middleware internals and session query).
+- **Session query** (`sessionQueryOptions`) stays **without** middleware — it only reports whether a session exists.
 
-Until then, handlers must still verify session manually inside the handler body — do not skip server checks because layout guards exist.
+## Domain vs auth call shapes
+
+| | Domain serverFn | Auth mutation |
+|--|-----------------|---------------|
+| Transport | `createServerFn` | `authClient` |
+| Middleware | `authMiddleware` when user-scoped | N/A |
+| Mutation wiring | `appMutationFn(serverFn)` direct | Thin wrapper + `authClient` |
+| Form `mutateAsync` | `{ data: { formData: value, … } }` | `{ formData: value }` |
 
 ## What auth shares with domain features
 
-Auth mutations are **not** an exception to `appMutationFn`, `createSuccessResponse`, or `invalidateOnSuccess`. The **only** auth-specific deviation is calling **`authClient`** instead of **`createServerFn`** for login, signup, and logout.
+Auth mutations are **not** an exception to `appMutationFn`, `createSuccessResponse`, or `invalidateOnSuccess`. The auth-specific deviations are: **`authClient`** instead of **`createServerFn`**, and **`{ formData }`** instead of **`{ data: { formData } }`** on `mutateAsync`.
 
 Session **reads** use a private GET `createServerFn` like domain queries — see `session-query-options.ts`.
 
@@ -101,4 +119,5 @@ Session **reads** use a private GET `createServerFn` like domain queries — see
 - Do not call `authClient` from routes or `-lib` forms.
 - Do not use `beforeLoad` / `useLoaderData` for session — subscribe with `useAuth()` / `sessionQueryOptions()`.
 - Do not add inline “invalid email or password” server error regions — rely on toasts and let the user retry.
-- Do not skip server-side session checks in protected serverFns — use `authMiddleware` once available; until then, verify in the handler.
+- Do not skip `authMiddleware` on protected domain serverFns because layout guards exist.
+- Do not call `getSession` manually in domain handlers when middleware already ran.

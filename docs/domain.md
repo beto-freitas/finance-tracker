@@ -7,7 +7,7 @@ How the engineering skills should consume this repo's domain documentation when 
 - **`CONTEXT.md`** at the repo root
 - **`docs/concepts/`** — feature-level design notes per domain area (e.g. `expenses.md`). Captures *why* a concept is shaped the way it is, real-world scenario mapping, deferred ideas, and out-of-scope boundaries. Read the relevant concept doc before proposing changes to that area.
 - **`docs/adr/`** — read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
-- **`docs/guides/`** — procedural how-tos paired with ADRs (e.g. adding form field types). When you change an architectural definition, update the ADR **and** any linked guide in the same PR.
+- **`docs/guides/`** — procedural how-tos paired with ADRs (e.g. [`adding-form-fields.md`](guides/adding-form-fields.md), [`project-layout.md`](guides/project-layout.md)). When you change an architectural definition, update the ADR **and** any linked guide in the same PR.
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The producer skill (`/grill-with-docs`) creates them lazily when terms or decisions actually get resolved.
 
@@ -19,9 +19,16 @@ If any of these files don't exist, **proceed silently**. Don't flag their absenc
 ├── docs/
 │   ├── concepts/
 │   │   └── expenses.md
-│   └── adr/
-│       ├── 0001-event-sourced-orders.md
-│       └── 0002-postgres-for-write-model.md
+│   ├── adr/
+│   │   ├── 0001-form-input-architecture.md
+│   │   ├── 0002-auth-boundary-and-route-guards.md
+│   │   ├── 0003-server-functions-and-data-fetching.md
+│   │   └── 0004-database-schema-layout.md
+│   └── guides/
+│       ├── adding-form-fields.md
+│       ├── auth-patterns.md
+│       ├── feature-end-to-end.md
+│       └── project-layout.md
 └── src/
 ```
 
