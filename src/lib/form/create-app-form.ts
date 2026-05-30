@@ -24,7 +24,7 @@ import { fieldInputWrapper } from "#/lib/form/field-input-wrapper.tsx";
  * function ProfileForm() {
  *   const form = useAppForm({
  *     defaultValues: { firstName: "" },
- *     validators: { onChange: profileSchema, onSubmit: profileSchema },
+ *     validators: { onChange: profileSchema },
  *   });
  *
  *   return (

@@ -1,7 +1,7 @@
 import { mutationOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { signupFormSchema } from "#/features/auth/schemas/signup-form-schema.ts";
-import { authClient } from "#/lib/auth-client.ts";
+import { authClient } from "#/lib/auth/auth-client";
 import { appMutationFn } from "#/lib/query/app-mutation-fn";
 import { invalidateOnSuccess } from "#/lib/query/invalidate-on-success";
 import { createSuccessResponse } from "#/lib/server-fn/create-success-response";
@@ -24,7 +24,6 @@ async function signupMutationFn(input: SignupMutationInput) {
 
 export function signupMutationOptions() {
 	return mutationOptions({
-		mutationKey: ["auth", "signup"],
 		mutationFn: appMutationFn(signupMutationFn),
 		onSuccess: async (...args) => {
 			await invalidateOnSuccess(args, sessionQueryOptions().queryKey);

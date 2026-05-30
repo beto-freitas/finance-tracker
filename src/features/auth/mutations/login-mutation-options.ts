@@ -1,7 +1,7 @@
 import { mutationOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { loginFormSchema } from "#/features/auth/schemas/login-form-schema.ts";
-import { authClient } from "#/lib/auth-client.ts";
+import { authClient } from "#/lib/auth/auth-client";
 import { appMutationFn } from "#/lib/query/app-mutation-fn";
 import { invalidateOnSuccess } from "#/lib/query/invalidate-on-success";
 import { createSuccessResponse } from "#/lib/server-fn/create-success-response";
