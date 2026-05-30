@@ -1,4 +1,4 @@
-import { HTTP_STATUS, type HTTPStatus } from "../http-status";
+import { HTTP_STATUS, type HTTPStatus } from "./http-status";
 
 export type SuccessResponse<TData> = {
 	data?: TData;
@@ -6,13 +6,14 @@ export type SuccessResponse<TData> = {
 	status: HTTPStatus;
 };
 
-export function createSuccessResponse<TData>(params?: {
+export function createSuccessResponse<TData = null>(params?: {
 	data?: TData;
 	message?: string;
 	status?: HTTPStatus;
 }): SuccessResponse<TData> {
 	return {
-		data: params?.data,
+		// collapsed to null. useQuery doesn't like undefined as data type.
+		data: params?.data ?? (null as TData),
 		message: params?.message,
 		status: params?.status ?? HTTP_STATUS.OK,
 	};

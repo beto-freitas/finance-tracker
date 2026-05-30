@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Toaster } from "#/components/ui/sonner.tsx";
-import TanStackQueryDevtools from "#/lib/query-devtools";
+import TanStackQueryDevtools from "#/lib/query/query-devtools";
 import appCss from "../styles.css?url";
 
 interface RouterContext {

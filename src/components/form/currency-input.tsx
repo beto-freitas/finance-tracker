@@ -5,7 +5,7 @@ import {
 	NumberInput,
 	type NumberInputProps,
 } from "#/components/form/number-input.tsx";
-import type { CurrencyCode } from "#/lib/currency.ts";
+import type { CurrencyCode } from "#/lib/currency/currencies";
 import { getCurrencyDisplayMeta } from "#/lib/form/currency-display.ts";
 
 export type CurrencyInputProps = Omit<

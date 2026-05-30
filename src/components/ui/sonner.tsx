@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type * as React from "react";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
-import { useTheme } from "#/stores/theme.ts";
+import { useTheme } from "#/lib/stores/theme";
 
 function Toaster({ ...props }: ToasterProps) {
 	const theme = useTheme((state) => state.theme);
