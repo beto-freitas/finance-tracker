@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
-    "@better-auth/drizzle-adapter": "^1.6.11",
+    "@better-auth/drizzle-adapter": "1.6.11",
     "@libsql/client": "^0.17.3",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",
@@ -35,7 +35,7 @@
     "@tanstack/react-store": "^0.11.0",
     "@tanstack/router-plugin": "^1.132.0",
     "@tanstack/zod-adapter": "^1.167.0",
-    "better-auth": "^1.5.3",
+    "better-auth": "1.6.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.3.0",
