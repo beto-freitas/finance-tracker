@@ -12,3 +12,11 @@ Before **`git push`**, **`gh pr create`**, or any other remote Git/`gh` command:
 ### Domain docs
 
 Single-context layout — `CONTEXT.md` at the repo root, with `docs/concepts/`, `docs/adr/`, and `docs/guides/` underneath. See [`docs/domain.md`](docs/domain.md) for the full reading order and conventions.
+
+### Dependency versions
+
+Dependencies in `package.json` are **pinned to exact versions** (no `latest` or `^` ranges). Do not bump packages casually — especially not in drive-by “cleanup” PRs.
+
+**Why:** Supply-chain safety. Recent npm attacks make floating ranges risky; pinned versions mean installs are reproducible and upgrades are deliberate.
+
+**TanStack Start / Router ceiling:** `@tanstack/react-start` (`1.167.16`) and `@tanstack/react-router` (`1.168.10`) are intentionally behind current releases. Newer versions trigger a production-only bug — `Server function info not found` on routes that call server functions (e.g. `/login` via `useAuth` / session query). Works in `pnpm dev`; breaks after `pnpm build` + preview/prod. Upstream: [TanStack/router#7213](https://github.com/TanStack/router/issues/7213).
