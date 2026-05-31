@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-31T00:00:00.000Z",
+  "title": "Design System: Finance Tracker",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Signal Green",
+        "canonical": "#9fe870",
+        "notes": "Manually chosen accent. Open to refinement; must stay trustworthy."
+      },
+      "primary-foreground": {
+        "role": "primary",
+        "displayName": "Forest Ink",
+        "canonical": "#163300"
+      },
+      "primary-muted": {
+        "role": "primary",
+        "displayName": "Muted Sage",
+        "canonical": "#91d963",
+        "notes": "Light mode uses #2f6c00"
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Charcoal Base",
+        "canonical": "#1a1c1a",
+        "notes": "Dark-first canonical. Light: #f9f9f6 Warm Canvas"
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "#f1f1ee"
+      },
+      "warning": {
+        "role": "semantic",
+        "displayName": "Overdue Amber",
+        "canonical": "#ffd11a",
+        "purpose": "Overdue receipts/payments and cautionary states"
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Sage Edge",
+        "canonical": "#4a4d48"
+      }
+    },
+    "typographyMeta": {
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default UI and form text. Outfit 400."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, field labels, nav. Outfit 500."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles, section headers. Outfit 600. Page h1 scale TBD."
+      }
+    },
+    "shadows": [
+      {
+        "name": "hairline",
+        "value": "shadow-xs (Tailwind)",
+        "purpose": "Inputs, outline buttons"
+      },
+      {
+        "name": "lift",
+        "value": "shadow-sm",
+        "purpose": "Cards, floating sidebar"
+      },
+      {
+        "name": "overlay",
+        "value": "shadow-md",
+        "purpose": "Popovers, dropdowns, combobox"
+      }
+    ],
+    "motion": [
+      {
+        "name": "sidebar-collapse",
+        "value": "200ms ease-linear",
+        "purpose": "Sidebar width transition"
+      },
+      {
+        "name": "overlay-enter",
+        "value": "fade + zoom via tw-animate-css",
+        "purpose": "Popover/dropdown open"
+      }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px", "notes": "Input text-base → text-sm" }
+    ],
+    "implementation": {
+      "tokenSource": "src/styles.css (:root + .dark)",
+      "componentLayer": "shadcn + Tailwind v4 (@theme inline)",
+      "themeDefault": "dark",
+      "themeSwitching": "planned — dark currently hardcoded on <html> for testing",
+      "rewriteNote": "Owner may replace shadcn token structure later. Treat current vars as working baseline until migration."
+    }
+  },
+  "narrative": {
+    "northStar": "The Clear Ledger",
+    "overview": "Dark-first product UI for cross-currency personal finance. Precise, trustworthy, no-nonsense. Hierarchy like Nubank; data surfaces chosen by meaning, not card grids by default.",
+    "keyCharacteristics": [
+      "Dark-first with light parity in CSS",
+      "Signal Green accent on charcoal neutrals",
+      "Outfit single-family typography",
+      "Flat tonal surfaces, sparse shadows",
+      "shadcn as current implementation layer"
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Rule",
+        "body": "Signal Green on primary actions and selective emphasis only.",
+        "section": "colors"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Depth from surface steps and borders, not stacked shadows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Use semantic CSS vars for theme parity",
+      "Pick list/summary/inline layouts when cards would be lazy",
+      "One primary action per view where possible"
+    ],
+    "donts": [
+      "Card-grid every page or default to data tables",
+      "Multi-page flows for single actions",
+      "Parallel token systems without migration plan"
+    ]
+  }
+}

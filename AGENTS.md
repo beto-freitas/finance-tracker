@@ -13,6 +13,16 @@ Before **`git push`**, **`gh pr create`**, or any other remote Git/`gh` command:
 
 Single-context layout — `CONTEXT.md` at the repo root, with `docs/concepts/`, `docs/adr/`, and `docs/guides/` underneath. See [`docs/domain.md`](docs/domain.md) for the full reading order and conventions.
 
+### Design context (Impeccable)
+
+UI work should read these before designing or polishing surfaces:
+
+- [`PRODUCT.md`](PRODUCT.md) — register (`product`), users, brand personality, anti-references, design principles
+- [`DESIGN.md`](DESIGN.md) — tokens, typography, components, do's/don'ts (Google Stitch format)
+- [`.impeccable/design.json`](.impeccable/design.json) — sidecar metadata (color display names, implementation notes)
+
+Domain language stays in `CONTEXT.md`; design strategy and visual spec live in the files above. Invoke Impeccable via the skill in `.agents/skills/impeccable/` (e.g. critique, polish, layout on a specific target).
+
 ### Dependency versions
 
 Dependencies in `package.json` are **pinned to exact versions** (no `latest` or `^` ranges). Do not bump packages casually — especially not in drive-by “cleanup” PRs.
