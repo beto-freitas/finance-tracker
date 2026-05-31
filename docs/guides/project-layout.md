@@ -1,63 +1,66 @@
 # Project layout
 
-Canonical map of shared modules under `src/lib/`, `src/db/`, and dev tools. ADRs link here instead of duplicating full path lists.
+Entry-point map for shared code. ADRs link here instead of duplicating full path lists.
 
-**Before importing from `src/lib/`**, check this file. Stale paths in older snippets are wrong.
+**Before importing from `src/lib/`**, check this file. Prefer conventions and grep over expecting every file listed here.
 
-## `src/lib/` — shared infrastructure
+## Top-level tree
+
+```
+src/
+  components/ui/   shadcn primitives + app chrome (sidebar, spinner, …)
+  db/              Drizzle client, schemas, relations — see ADR-0004
+  features/        Domain modules (queries, mutations, schemas) — see ADR-0003
+  lib/             Cross-cutting infra (auth, query, server-fn, form, …)
+  routes/          TanStack Router file routes
+tools/             Dev-only scripts (see below)
+```
+
+**Conventions:** one concern per `lib/{domain}/` folder; feature file name = export name (`cash-account-list-query-options.ts` → `cashAccountListQueryOptions()`). Do not add every new file to this doc — add a row only when the path or naming is not discoverable from conventions.
+
+## `src/lib/` entry points
 
 | Path | Purpose |
 |------|---------|
-| `lib/auth/auth-server.ts` | Better Auth server instance (`authServer`) — server-only |
-| `lib/auth/auth-client.ts` | Better Auth client (`authClient`) — browser |
-| `lib/currency/currencies.ts` | `SUPPORTED_CURRENCIES`, `CurrencyCode`, labels |
-| `lib/currency/minor-units.ts` | `toMinorUnits`, `fromMinorUnits` — **only** place for `×100` / `÷100` (see [feature-end-to-end](./feature-end-to-end.md#persistence-conventions)) |
-| `lib/currency/format-currency.ts` | Display formatting — takes **major** units |
-| `lib/date/iso-date.ts` | `toIsoDate`, `todayIsoDate` — calendar date helpers |
-| `lib/db/utils.ts` | `idColumn`, `timestampsColumns`, … — see [ADR-0004](../adr/0004-database-schema-layout.md) |
-| `lib/env/env-server.ts` | Zod-validated server env (`TURSO_*`, …) — server-only |
-| `lib/env/env-client.ts` | Zod-validated client env (`BETTER_AUTH_URL`, …) |
-| `lib/errors/app-error.ts` | Base expected-failure error |
-| `lib/errors/app-unauthenticated-error.ts` | 401 for missing session (middleware) |
-| `lib/form/` | TanStack Form hook, field wrapper, display helpers |
-| `lib/hooks/use-auth.ts` | Session subscription hook |
+| `lib/auth/auth-server.ts` / `auth-client.ts` | Better Auth server (`authServer`) and client (`authClient`) |
 | `lib/query/query.ts` | Query client factory |
-| `lib/query/app-query-fn.ts` | Query envelope unwrap + toast |
-| `lib/query/app-mutation-fn.ts` | Mutation envelope unwrap + toast |
+| `lib/query/app-query-fn.ts` / `app-mutation-fn.ts` | Envelope unwrap + toast for queries/mutations |
 | `lib/query/invalidate-on-success.ts` | `invalidateOnSuccess` helper |
+| `lib/query/query-client-on-success.ts` | `queryClientOnSuccess` — access query client from mutation `onSuccess` args |
 | `lib/server-fn/auth-middleware.ts` | `authMiddleware` for protected serverFns |
 | `lib/server-fn/create-success-response.ts` | Success envelope |
 | `lib/server-fn/response-data.ts` | `AppServerFnResult` type helper |
-| `lib/server-fn/http-status.ts` | HTTP status constants |
+| `lib/hooks/use-auth.ts` | Session subscription hook |
+| `lib/form/` | TanStack Form hook, field wrapper, display helpers |
+| `lib/currency/minor-units.ts` | **Only** place for `×100` / `÷100` (see [feature-end-to-end](./feature-end-to-end.md#persistence-conventions)) |
+| `lib/sidebar/read-sidebar-open.ts` | Isomorphic cookie read for SSR (`createIsomorphicFn`) |
+| `lib/sidebar/sidebar-position-cookie.ts` | Cookie parse + write (7-day expiry) |
+| `lib/sidebar/sidebar-items.ts` | Sidebar nav config |
+| `lib/env/env-server.ts` / `env-client.ts` | Zod-validated env — server-only / client |
+| `lib/errors/app-error.ts` / `app-unauthenticated-error.ts` | Expected failures; 401 for missing session |
 | `lib/utils.ts` | `cn()` and project-wide `Icon` type alias |
 
-### Moved paths (do not use)
+Other `lib/` folders (`currency/`, `date/`, `db/utils.ts`, …) follow the same one-concern-per-folder pattern — browse or grep the folder.
 
-| Old | New |
-|-----|-----|
-| `#/lib/auth.ts` | `#/lib/auth/auth-server.ts` |
-| `#/lib/auth-client.ts` | `#/lib/auth/auth-client.ts` |
-| `#/lib/currency.ts` | `#/lib/currency/currencies.ts` |
-| `#/lib/http-status.ts` | `#/lib/server-fn/http-status.ts` |
-| `#/lib/query.ts` | `#/lib/query/query.ts` |
-| `src/types/icon.ts` | `Icon` type in `#/lib/utils.ts` |
+## App shell
 
-## `src/db/` — database
+Protected app chrome lives at `src/routes/app/route.tsx`:
 
-See [ADR-0004](../adr/0004-database-schema-layout.md).
+- **Session guard** — `AppLayout` uses `useAuth()`; missing session → `/login` with `redirect` search param. See [auth-patterns](./auth-patterns.md).
+- **Sidebar** — `AppSidebar` from `components/ui/app-sidebar.tsx`; nav items in `lib/sidebar/sidebar-items.ts`.
+- **Outlet pending UI** — `<Suspense fallback={<LoadingSpinner />}>` wraps `<Outlet />`. Catches `useSuspenseQuery` suspends in child routes. See [ADR-0003 § Layout-level pending UI](../adr/0003-server-functions-and-data-fetching.md#layout-level-pending-ui).
 
-| Path | Purpose |
-|------|---------|
-| `db/index.ts` | Drizzle v1 client |
-| `db/schemas/` | One table per file + barrel |
-| `db/relations.ts` | `defineRelations` |
-| `lib/db/utils.ts` | Shared column helpers |
+**Sidebar open state (SSR seed, not a query subscription):** `beforeLoad` calls `readSidebarOpen()` → route context `sidebarOpen` → `AppSidebar defaultOpen` → private `useState` in the sidebar root. Toggle writes the cookie only (not on mount). Do not treat `sidebarOpen` context as live data after mount — runtime state is component-local.
 
-## `src/features/` — feature modules
+## `src/features/`
 
-Each feature owns queries, mutations, schemas, and optional `lib/` helpers. See [ADR-0003](../adr/0003-server-functions-and-data-fetching.md) and [`feature-end-to-end.md`](./feature-end-to-end.md).
+Each feature owns queries, mutations, schemas, and optional `lib/` helpers. See [ADR-0003](../adr/0003-server-functions-and-data-fetching.md) and [feature-end-to-end](./feature-end-to-end.md).
 
 **Live domain reference:** `src/features/cash-accounts/`
+
+## `src/db/`
+
+See [ADR-0004](../adr/0004-database-schema-layout.md). Entry: `db/index.ts`, `db/schemas/`, `db/relations.ts`, shared columns in `lib/db/utils.ts`.
 
 ## Dev tools
 

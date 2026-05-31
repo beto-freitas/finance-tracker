@@ -115,7 +115,23 @@ Forms on routes follow [ADR-0001](./0001-form-input-architecture.md): dedicated 
 | Primary page content (e.g. cash account list) | `useSuspenseQuery` | Yes — `ensureQueryData` in `loader` |
 | Secondary / on-demand (e.g. edit panel, dialog) | `useQuery` with local pending/error UI | Optional |
 
-TanStack Start route trees are wrapped in **Suspense by default**, so `useSuspenseQuery` on primary page data does not require adding a custom boundary in each route. **Page skeletons** for pending UI are a planned follow-up.
+### Layout-level pending UI
+
+The `/app` layout wraps `<Outlet />` in React `<Suspense>` with a default `LoadingSpinner` fallback (`src/routes/app/route.tsx`). This catches suspends from **`useSuspenseQuery`** (and similar) in child route components — the primary pattern for domain data.
+
+**Two separate mechanisms — do not conflate them:**
+
+| Mechanism | What triggers it | Our usage |
+|-----------|------------------|-----------|
+| **React `<Suspense>`** (layout boundary) | Component render suspends (`useSuspenseQuery`, lazy imports) | Default pending UI for page data |
+| **Router `pendingComponent`** | Async route `loader` / `beforeLoad` (after `pendingMs`, per TanStack Router docs) | Not configured today; unreliable for slow `beforeLoad` in practice ([router#1029](https://github.com/TanStack/router/discussions/1029)) |
+
+**Critical:** `beforeLoad` and `loader` run **before** the layout component mounts. Slow work there does **not** pass through the app shell's React Suspense boundary — expect a blank page unless that route defines `pendingComponent`. Keep `beforeLoad` sync/fast (e.g. cookie reads for SSR seed). Use `useSuspenseQuery` in the page component for data that should show the layout spinner.
+
+- **`loader` + `ensureQueryData`:** warms the cache before render; if data is ready when the page mounts, `useSuspenseQuery` may not suspend. A slow loader itself is router `pendingComponent` territory, not layout Suspense.
+- **Per-route override:** set `pendingComponent` on a route when `useSuspenseQuery` is not the right fit and you need route-specific pending UI.
+
+See also: app shell summary in [`project-layout.md`](../guides/project-layout.md#app-shell).
 
 ### Route `-lib` vs feature layer
 
@@ -132,7 +148,7 @@ TanStack Start route trees are wrapped in **Suspense by default**, so `useSuspen
 
 ## Follow-up
 
-- **Route skeletons** for suspense pending UI.
+- **Per-route pending UI** — optional `pendingComponent` where layout Suspense + `useSuspenseQuery` is not enough.
 - **Generic balance field mapper** — helper over `{ balanceMinor }` objects/arrays with inferred `{ balanceMajor }` return when 3+ query handlers need it (see [feature-end-to-end](../guides/feature-end-to-end.md#persistence-conventions)).
 
 ## Keeping this ADR current

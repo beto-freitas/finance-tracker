@@ -212,7 +212,7 @@ function CashAccountsPage() {
 - `useSuspenseQuery(cashAccountListQueryOptions())` → **live** cache subscription; stays fresh after `invalidateOnSuccess`.
 - **Never** render list data from `Route.useLoaderData()` for query-backed UI.
 
-TanStack Start wraps routes in Suspense by default, so primary `useSuspenseQuery` usage works without adding a local boundary. Skeleton pending UI is planned later.
+The `/app` layout wraps the outlet in `<Suspense>` with a default spinner — primary `useSuspenseQuery` usage shows that fallback while page data loads. See [ADR-0003 § Layout-level pending UI](../adr/0003-server-functions-and-data-fetching.md#layout-level-pending-ui). Add per-route `pendingComponent` only when `useSuspenseQuery` is not the right fit.
 
 ---
 

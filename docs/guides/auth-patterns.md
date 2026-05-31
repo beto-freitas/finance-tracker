@@ -79,6 +79,21 @@ Session subscription uses the same `sessionQueryOptions()` factory as everywhere
 
 Layout guards are **UX-only**. They do not replace server-side auth on protected handlers.
 
+## Session cache hygiene
+
+TanStack Query caches domain data per browser session. Clear it when the authenticated user changes so the next session never reads stale data from the previous one.
+
+**Today**
+
+- **Guest guard (`_auth`):** if `useAuth()` finds a session, `AuthLayout` calls `queryClient.clear()` then redirects to `/app/dashboard`. Prevents a logged-in user who lands on `/login` from carrying another user's cached queries if they had switched accounts elsewhere.
+- **Logout (sidebar):** `logoutMutationOptions` invalidates `sessionQueryOptions` only. No explicit `navigate` — session goes null → `AppLayout` guard redirects to `/login`.
+
+**Planned**
+
+- Move `queryClient.clear()` to `logoutMutationOptions` `onSuccess` (and remove the `_auth` guard clear once that is in place). Use `queryClientOnSuccess` from `lib/query/query-client-on-success.ts` to access the client in `onSuccess`, same pattern as `invalidateOnSuccess`.
+
+Do not rely on layout guards alone to isolate cache between users — guards redirect; they do not wipe query data.
+
 ## Protected serverFns — `authMiddleware`
 
 Domain GET/POST serverFns that read or write authenticated user data **must** use `authMiddleware`. RPCs remain callable via direct HTTP requests even when the UI redirects unauthenticated users.
