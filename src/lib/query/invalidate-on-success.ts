@@ -1,12 +1,14 @@
-import type { MutationOptions, QueryKey } from "@tanstack/react-query";
+import type { QueryKey } from "@tanstack/react-query";
+import {
+	type MutationOnSuccessArgs,
+	queryClientOnSuccess,
+} from "./query-client-on-success";
 
 export async function invalidateOnSuccess(
-	args: Parameters<
-		NonNullable<
-			MutationOptions<unknown, unknown, unknown, unknown>["onSuccess"]
-		>
-	>,
+	args: MutationOnSuccessArgs,
 	queryKey: QueryKey,
 ) {
-	await args[3].client.invalidateQueries({ queryKey });
+	const queryClient = queryClientOnSuccess(args);
+
+	await queryClient.invalidateQueries({ queryKey });
 }
