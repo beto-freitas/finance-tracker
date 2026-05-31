@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Toaster } from "#/components/ui/sonner.tsx";
+import { TooltipProvider } from "#/components/ui/tooltip";
 import TanStackQueryDevtools from "#/lib/query/query-devtools";
 import appCss from "../styles.css?url";
 
@@ -24,6 +25,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 		links: [{ rel: "stylesheet", href: appCss }],
 	}),
 	shellComponent: RootDocument,
+	notFoundComponent: () => {
+		return <div>Not found</div>;
+	},
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
@@ -33,8 +37,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<HeadContent />
 			</head>
 			<body>
-				{children}
-				<Toaster />
+				<TooltipProvider>
+					{children}
+					<Toaster />
+				</TooltipProvider>
+
 				<TanStackDevtools
 					config={{ position: "bottom-right" }}
 					plugins={[
