@@ -2,9 +2,8 @@ import { z } from "zod";
 
 const uuidParam = z.uuid();
 
-/** Parsed from `/app/income` search; drives overlay hosts in later phases. */
+/** Parsed from `/app/income` search; drives overlay hosts on the income route. */
 export const incomeRouteSearchSchema = z.object({
-	// TODO: superRefine mutually exclusive search params (e.g. create + edit income source)
 	manage: z.enum(["income-sources", "settlement-platforms"]).optional(),
 	"create-income-source": z.literal("true").optional(),
 	"edit-income-source-id": uuidParam.optional(),

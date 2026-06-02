@@ -6,6 +6,7 @@ import { Button } from "#/components/ui/button";
 import { cashAccountListQueryOptions } from "#/features/cash-accounts/queries/cash-account-list-query-options";
 import { incomeSetupStatusQueryOptions } from "#/features/income/queries/income-setup-status-query-options";
 import { incomeRouteSearchSchema } from "#/features/income/schemas/income-route-search-schema";
+import { SettlementPlatformOverlays } from "./-lib/settlement-platform-overlays";
 
 export const Route = createFileRoute("/app/income/")({
 	validateSearch: zodValidator(incomeRouteSearchSchema),
@@ -20,11 +21,11 @@ function IncomePage() {
 	const { data: cashAccounts } = useSuspenseQuery(
 		cashAccountListQueryOptions(),
 	);
-	const { data: setupStatus } = useSuspenseQuery(
+	const { data: incomeSetupStatus } = useSuspenseQuery(
 		incomeSetupStatusQueryOptions(),
 	);
 	const hasCashAccount = cashAccounts.length > 0;
-	const hasIncomeSources = setupStatus.hasIncomeSources;
+	const hasIncomeSources = incomeSetupStatus.hasIncomeSources;
 
 	return (
 		<main className="flex flex-col gap-4 p-6">
@@ -116,6 +117,8 @@ function IncomePage() {
 					</Link>
 				</p>
 			) : null}
+
+			<SettlementPlatformOverlays />
 		</main>
 	);
 }
