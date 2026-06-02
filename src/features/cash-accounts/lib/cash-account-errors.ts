@@ -15,3 +15,11 @@ export class CashAccountNotFoundError extends AppError {
 		});
 	}
 }
+
+export class CashAccountRequiredError extends AppError {
+	constructor() {
+		super({
+			message: "Please set up a cash account before continuing",
+		});
+	}
+}
