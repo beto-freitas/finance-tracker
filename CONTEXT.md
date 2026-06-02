@@ -43,6 +43,10 @@ _Avoid_: Cleared, confirmed transaction
 An **expected receipt** whose expected date has passed but hasn't been marked **received**. Still counts toward **Cash position** projections, but is flagged so you know something is off.
 _Avoid_: Late payment, pending receipt
 
+**Cancelled expected receipt**:
+An **expected receipt** the user explicitly removed from projections (e.g. a client did not pay that invoice). Stored with **cancelled** status — not deleted — so history stays auditable and **Cash position** no longer counts it.
+_Avoid_: Deleted receipt, voided payment
+
 **Materialized receipts**:
 Expected **Income receipts** the app creates and stores upfront — a rolling window (~6 months ahead) from each **Income source**.
 _Avoid_: Scheduled entries, cached receipts

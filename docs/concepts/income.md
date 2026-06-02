@@ -68,7 +68,8 @@ The grill that produced this model. Each line: **decision** — *rationale*.
 - **Per-receipt override of settled amount** — `Expected settled amount = nominal × effective rate` is the default; user can override one receipt's expected settled amount (e.g. "I know this one will be different because the platform is running a promo").
 - **Standalone receipt has two flavors**: (a) `income currency` via a `Settlement platform` (same conversion math as sourced), or (b) `cash currency` direct (no platform, no nominal).
 - **Lifecycle `Expected receipt → Received receipt`** — mark received with actual date and actual settled amount. Rate details are optional at receipt time; the truth is the BRL that landed.
-- **`Overdue receipt` stays in `Cash position` math** — flagged in UI but still counted (you still expect the money). Resolved by marking `Received` or by cancellation.
+- **`Overdue receipt` stays in `Cash position` math** — flagged in UI but still counted (you still expect the money). Resolved by marking `Received` or by **Cancelled expected receipt**.
+- **`Cancelled expected receipt` is stored, not deleted** — row keeps `cancelled` status for audit; projections ignore it.
 - **Materialization**: `Income source` materializes ~6 months of `Expected receipts`; `Derived receipts` are computed on the fly for `Prospect` beyond that window. Same math, different storage.
 - **Past is sacred** — source edits regenerate only future `Expected receipts`. `Received`, `Overdue`, and per-receipt overrides are never rewritten.
 - **`Ended source`** — `Income source` with an end date stops generating new receipts after that date. Existing receipts remain.
@@ -90,6 +91,9 @@ Justified by intrinsic domain shape, not oversight:
 
 Considered during the grill and pushed past v1. Each is real, each is reversible:
 
+- **Global assumed base rate** — v1 stores `Assumed base rate` on each **Settlement platform** because FX platforms are few. Later: one user-level default rate (BRL per USD) with an optional per-platform “override global configuration” flag when platforms differ slightly.
+- **BR public holidays in business-day math** — v1 shifts invoice dates and payment lag on weekends only (Mon–Fri calendar). National holidays are not modeled yet.
+- **Edit received receipts** — v1 is mark-once; correcting actual date or settled amount after **received** is deferred.
 - **Live FX rate fetching** — `Assumed base rate` stays user-set. Wiring up a live rate source (Banco Central, a market data API) is a future integration.
 - **Hybrid override at the rate level** — currently you override the **resulting settled amount**. A finer-grained override would let you keep the formula but plug in a different base rate per receipt. Not enough demand yet.
 - **Non-monthly schedules** — quarterly retainers, annual bonuses with a fixed date. Route through `Standalone receipt` for now.

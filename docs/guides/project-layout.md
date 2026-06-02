@@ -18,6 +18,16 @@ tools/             Dev-only scripts (see below)
 
 **Conventions:** one concern per `lib/{domain}/` folder; feature file name = export name (`cash-account-list-query-options.ts` → `cashAccountListQueryOptions()`). Do not add every new file to this doc — add a row only when the path or naming is not discoverable from conventions.
 
+### Helper JSDoc
+
+Exported helpers in `lib/**` and `domain/**`:
+
+- One-line JSDoc stating purpose; add `@param` / `@returns` when non-obvious.
+- Document invariants (e.g. UTC calendar dates, integer basis points).
+- Skip trivial one-liners and test files.
+
+React components and route modules follow the same bar only when the export is a non-obvious pure helper.
+
 ## `src/lib/` entry points
 
 | Path | Purpose |
@@ -33,6 +43,7 @@ tools/             Dev-only scripts (see below)
 | `lib/hooks/use-auth.ts` | Session subscription hook |
 | `lib/form/` | TanStack Form hook, field wrapper, display helpers |
 | `lib/currency/minor-units.ts` | **Only** place for `×100` / `÷100` (see [feature-end-to-end](./feature-end-to-end.md#persistence-conventions)) |
+| `lib/currency/currencies.ts` / `currency-columns.ts` | SSOT currency codes; Drizzle enum columns for supported vs FX income currency |
 | `lib/sidebar/read-sidebar-open.ts` | Isomorphic cookie read for SSR (`createIsomorphicFn`) |
 | `lib/sidebar/sidebar-position-cookie.ts` | Cookie parse + write (7-day expiry) |
 | `lib/sidebar/sidebar-items.ts` | Sidebar nav config |
