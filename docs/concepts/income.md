@@ -76,6 +76,8 @@ The grill that produced this model. Each line: **decision** — *rationale*.
 - **`Tracking start` from today** — past money is captured implicitly in the initial `Cash balance`; the app looks forward only. No backfill.
 - **Single `Cash account` per user** — one bank account for now. `Total cash` is just the single balance.
 - **No income categories** — users typically have 1–2 sources; the spread doesn't justify a categorization concept. Diverges from expenses, which do have `Expense category`.
+- **FX rates and amounts at 2 decimal places** — spread, assumed base rate, effective rate, and projected settled amounts use two decimals everywhere (e.g. base `5.00`, spread `0.30%` → effective `4.99`, $1,000 nominal → ~R$4,990). **Received** settled amounts override projections when money arrives.
+- **`Settlement platform` delete** — blocked while any `Income source` or `Income receipt` still references the platform (including **Standalone receipt** FX one-offs). The app returns a clear error; the user must detach or remove dependents first. DB `onDelete: cascade` is not relied on for user-initiated delete.
 
 ## Asymmetries vs. expenses
 
@@ -101,7 +103,9 @@ Considered during the grill and pushed past v1. Each is real, each is reversible
 - **Multiple `Cash accounts` per user** — one is enough for v1; multi-account routing is a meaningful UX expansion.
 - **Tax / withholding modeling** — gross-to-net conversion (e.g. INSS, IR) at the source. Today's model assumes the nominal amount IS what gets invoiced and ultimately settled.
 - **Multiple `Settlement platforms` chained per source** — e.g. USD → intermediate → BRL. Today a source links to one platform.
-- **Auto-detect rate from received receipts** — "you've been receiving R$4,985 lately, want to bump the assumed rate to 4.99?" Too magical for v1.
+- **`Settlement platform` delete (relaxed)** — allow delete when no `Income source` references the platform and no **expected** `Income receipt` does; **received** and **cancelled** rows may still reference it. Requires orphan/snapshot behavior on receipts so history is not wiped. Implement together with income-source delete/orphan rules.
+- **Sub-relational overlay stacks** — e.g. income-source setup sheet + source form + settlement-platform create dialog when cash currency ≠ income currency. Reuses the same create dialog; see [`overlays.md`](../guides/overlays.md).
+- **Auto-detect rate from received receipts** — "you've been receiving ~R$4,990 lately, want to bump the assumed rate?" Too magical for now.
 
 ## Out of scope
 

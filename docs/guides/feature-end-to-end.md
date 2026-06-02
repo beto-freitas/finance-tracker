@@ -8,7 +8,7 @@ Import paths: [`project-layout.md`](./project-layout.md). Database tables: [ADR-
 
 ## Keep this guide current
 
-When you add or change query/mutation factories, loader prefetch rules, route `-lib` conventions, or the serverFn envelope contract, update **this guide** in the same PR. If the change alters an architectural decision, update [ADR-0003](../adr/0003-server-functions-and-data-fetching.md) too. Code and docs should land together.
+When you add or change query/mutation factories, loader prefetch rules, route `-lib` conventions, overlay patterns, or the serverFn envelope contract, update **this guide** in the same PR. If overlays change, also update [`overlays.md`](./overlays.md). If the change alters an architectural decision, update [ADR-0003](../adr/0003-server-functions-and-data-fetching.md) too. Code and docs should land together.
 
 ## Prerequisites
 
@@ -371,13 +371,17 @@ export const Route = createFileRoute("/app/example/")({
 - [ ] Never render query-backed UI from `useLoaderData`
 - [ ] This guide and ADR-0003 updated if contracts changed
 
+## Overlays (sheet / dialog)
+
+URL-driven sheets and dialogs on a route (e.g. `/app/income`) are documented in [`overlays.md`](./overlays.md). Income settlement platforms are the reference implementation under `src/routes/app/income/-lib/`.
+
 ## What not to do
 
 - Do not shape GET responses like REST collections “just in case” — return what the UI context needs.
 - Do not export `createServerFn` handlers from feature modules.
 - Do not skip `authMiddleware` on protected serverFns because layout guards exist.
 - Do not duplicate query keys for invalidation — use `someQueryOptions().queryKey`.
-- Do not scatter minor-unit conversion outside `minor-units.ts`.
+- Do not scatter money `×100` / `÷100` outside `minor-units.ts` — use `basis-points.ts` and `exchange-rate-minor.ts` for spread and FX base rate storage (2dp).
 - Do not use `zodValidator` on serverFn `.inputValidator` — route `validateSearch` only.
 - Do not use `z.object({})` or `{}` to fake a no-input serverFn — omit `.inputValidator` instead.
 - Do not treat loader output as invalidation-safe data.

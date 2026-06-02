@@ -42,8 +42,12 @@ React components and route modules follow the same bar only when the export is a
 | `lib/server-fn/response-data.ts` | `AppServerFnResult` type helper |
 | `lib/hooks/use-auth.ts` | Session subscription hook |
 | `lib/form/` | TanStack Form hook, field wrapper, display helpers |
-| `lib/currency/minor-units.ts` | **Only** place for `×100` / `÷100` (see [feature-end-to-end](./feature-end-to-end.md#persistence-conventions)) |
-| `lib/currency/currencies.ts` / `currency-columns.ts` | SSOT currency codes; Drizzle enum columns for supported vs FX income currency |
+| `lib/currency/minor-units.ts` | Money only: `×100` / `÷100` (see [feature-end-to-end](./feature-end-to-end.md#persistence-conventions)) |
+| `lib/currency/basis-points.ts` | Spread percent majors ↔ basis points (×100, not money) |
+| `lib/currency/exchange-rate-minor.ts` | Assumed base rate majors ↔ rate minors (2dp, ×100; not cash) |
+| `lib/currency/format-rate.ts` | Display formatters for spread / base / effective (all 2dp) |
+| `lib/currency/currencies.ts` | SSOT currency codes (`SUPPORTED_CURRENCIES`, `FX_INCOME_CURRENCIES`) |
+| `lib/db/utils.ts` | `supportedCurrencyColumn`, `fxIncomeCurrencyColumn` Drizzle enums (import from `currencies.ts`) |
 | `lib/sidebar/read-sidebar-open.ts` | Isomorphic cookie read for SSR (`createIsomorphicFn`) |
 | `lib/sidebar/sidebar-position-cookie.ts` | Cookie parse + write (7-day expiry) |
 | `lib/sidebar/sidebar-items.ts` | Sidebar nav config |

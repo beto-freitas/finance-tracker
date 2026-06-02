@@ -32,7 +32,7 @@ An **Income receipt** with no **Income source** — for one-time money like a wo
 _Avoid_: Manual income, ad-hoc payment, orphan transaction
 
 **Expected receipt**:
-The projected date and amounts for an income receipt before money arrives — nominal amount (e.g. $1,000), expected settled amount (e.g. ~R$4,985), and expected date.
+The projected date and amounts for an income receipt before money arrives — nominal amount (e.g. $1,000), expected settled amount (e.g. ~R$4,990), and expected date.
 _Avoid_: Scheduled payment, pending deposit
 
 **Received receipt**:
@@ -72,7 +72,7 @@ The service that converts income currency into cash currency and sends it to you
 _Avoid_: Payment processor, payout provider, FX provider
 
 **Base exchange rate**:
-The reference rate before the settlement platform's spread — e.g. 1 USD = 5.0000 BRL.
+The reference rate before the settlement platform's spread — e.g. 1 USD = 5.00 BRL.
 _Avoid_: Market rate, mid-market rate
 
 **Exchange spread**:
@@ -80,7 +80,7 @@ A percentage the settlement platform takes off the base exchange rate (e.g. 0.30
 _Avoid_: Conversion fee, commission, FX fee
 
 **Effective exchange rate**:
-The rate actually applied after spread: base exchange rate × (1 − exchange spread). E.g. 5.0000 × 0.997 = 4.9850 BRL per USD.
+The rate actually applied after spread: base exchange rate × (1 − exchange spread). E.g. 5.00 × 0.997 = 4.99 BRL per USD (rates at 2 decimal places).
 _Avoid_: Applied rate, final rate
 
 **Assumed base rate**:
@@ -197,8 +197,9 @@ _Avoid_: Deleted income, deleted expense, inactive source, archived source
 - One **Income source** generates many **Income receipts** on its schedule.
 - **Income receipts** carry a **nominal amount** (income currency) and a **settled amount** (cash currency).
 - Projections and expense forecasts use **settled amounts** in **cash currency**.
-- When income currency ≠ cash currency, an **Income source** links to a **Settlement platform** with an **exchange spread** and an **assumed base rate**.
+- When income currency ≠ cash currency, an **Income source** links to a **Settlement platform** (which holds **exchange spread** and **assumed base rate**).
 - A **Settlement platform** can be shared by many **Income sources** (e.g. both freelance and salary through Higlobe).
+- A **Settlement platform** cannot be deleted while any **Income source** or **Income receipt** references it.
 - Expected settled amount = nominal amount × effective exchange rate (or overridden per receipt).
 - **Income sources** **materialize** expected receipts ~6 months ahead; editing a source regenerates future **expected** receipts (not **received** ones or manual overrides).
 - **Prospect** queries beyond that window **derive** receipts from source rules on demand — same math, not stored until inside the window.
@@ -223,7 +224,7 @@ _Avoid_: Deleted income, deleted expense, inactive source, archived source
 
 > **Dev:** A user has one income — salary, $2,000 a month, invoiced on the 5th and 20th, paid three business days later. Invoiced in USD but bank and expenses are in BRL. Higlobe converts at a 0.30% spread.
 >
-> **User:** That's one **Income source** in **income currency** USD, settled through **Higlobe**. Each **Income receipt** has a **nominal amount** of $1,000. For projections they set an **assumed base rate** of 5.00 — the app computes the **settled amount** as $1,000 × 5.00 × 0.997 = R$4,985. When Higlobe pays out, they mark it **received** with the actual **settled amount** from the withdraw detail (R$4,995.00 at base rate 5.01).
+> **User:** That's one **Income source** in **income currency** USD, settled through **Higlobe**. Each **Income receipt** has a **nominal amount** of $1,000. For projections they set an **assumed base rate** of 5.00 — the app computes the **settled amount** as $1,000 × 4.99 ≈ R$4,990 (effective rate after spread). When Higlobe pays out, they mark it **received** with the actual **settled amount** from the withdraw detail (R$4,995.00 at base rate 5.01).
 >
 > **Dev:** On the 10th, how much will they have on the 30th?
 >
