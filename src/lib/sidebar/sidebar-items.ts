@@ -1,5 +1,5 @@
 import type { LinkProps } from "@tanstack/react-router";
-import { LayoutDashboard, Wallet } from "lucide-react";
+import { ArrowDownLeft, LayoutDashboard, Wallet } from "lucide-react";
 import type { Icon } from "#/lib/utils";
 
 type SidebarItemLink = {
@@ -34,5 +34,11 @@ export const sidebarItems: SidebarItem[] = [
 		to: "/app/cash-accounts",
 		label: "Cash accounts",
 		icon: Wallet,
+	},
+	{
+		type: "link",
+		to: "/app/income",
+		label: "Income",
+		icon: ArrowDownLeft,
 	},
 ];
