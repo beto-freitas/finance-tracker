@@ -11,7 +11,7 @@ describe("materializeExpectedReceipts", () => {
 		paymentLagBusinessDays: 3,
 		endDate: null,
 		settlementPlatformId: "platform-1",
-		assumedBaseRateScaled: 50_000,
+		assumedBaseRateMinor: 500,
 		exchangeSpreadBasisPoints: 30,
 		occurrenceDayOfMonth: [5, 20],
 	};
@@ -21,7 +21,7 @@ describe("materializeExpectedReceipts", () => {
 		expect(drafts).toHaveLength(12);
 		expect(drafts.every((d) => d.status === "expected")).toBe(true);
 		expect(drafts.every((d) => d.nominalMinor === 100_000)).toBe(true);
-		expect(drafts.every((d) => d.expectedSettledMinor === 498_500)).toBe(true);
+		expect(drafts.every((d) => d.expectedSettledMinor === 499_000)).toBe(true);
 	});
 
 	it("skips receipts after source end date", () => {

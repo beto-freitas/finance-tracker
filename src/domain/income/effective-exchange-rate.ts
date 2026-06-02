@@ -1,13 +1,13 @@
 /**
- * Effective exchange rate scaled × 10_000 after platform spread.
- * @param assumedBaseRateScaled BRL per 1 USD major × 10_000 (50000 = 5.0000)
+ * Effective exchange rate minor (2dp BRL per USD) after platform spread.
+ * @param assumedBaseRateMinor BRL per 1 USD at 2 decimals (500 = 5.00)
  * @param exchangeSpreadBasisPoints Platform spread in basis points (30 = 0.30%)
  */
-export function computeEffectiveRateScaled(
-	assumedBaseRateScaled: number,
+export function computeEffectiveRateMinor(
+	assumedBaseRateMinor: number,
 	exchangeSpreadBasisPoints: number,
 ): number {
 	return Math.round(
-		(assumedBaseRateScaled * (10_000 - exchangeSpreadBasisPoints)) / 10_000,
+		(assumedBaseRateMinor * (10_000 - exchangeSpreadBasisPoints)) / 10_000,
 	);
 }

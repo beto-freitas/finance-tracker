@@ -1,5 +1,4 @@
 import * as s from "drizzle-orm/sqlite-core";
-import { fxIncomeCurrencyColumn } from "#/lib/currency/currency-columns";
 import * as u from "#/lib/db/utils";
 import { userIdColumn } from "./user-schema";
 
@@ -8,18 +7,16 @@ export const settlementPlatform = s.sqliteTable(
 	{
 		id: u.idColumn(),
 		name: s.text("name").notNull(),
-		incomeCurrency: fxIncomeCurrencyColumn(),
+		incomeCurrency: u.fxIncomeCurrencyColumn(),
 		exchangeSpreadBasisPoints: s
 			.integer("exchange_spread_basis_points")
 			.notNull(),
-		assumedBaseRateScaled: s.integer("assumed_base_rate_scaled").notNull(),
+		assumedBaseRateMinor: s.integer("assumed_base_rate_minor").notNull(),
 
 		userId: userIdColumn(),
 		...u.timestampsColumns(),
 	},
-	(table) => [
-		s.index("settlement_platform_userId_idx").on(table.userId),
-	],
+	(table) => [s.index("settlement_platform_userId_idx").on(table.userId)],
 );
 
 export const settlementPlatformIdColumn = (

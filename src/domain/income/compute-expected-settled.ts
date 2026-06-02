@@ -1,4 +1,4 @@
-import { computeEffectiveRateScaled } from "./effective-exchange-rate";
+import { computeEffectiveRateMinor } from "./effective-exchange-rate";
 
 /** BRL income: nominal and settled match 1:1 in minor units. */
 export function computeExpectedSettledMinorSameCurrency(
@@ -7,15 +7,15 @@ export function computeExpectedSettledMinorSameCurrency(
 	return nominalMinor;
 }
 
-/** FX: nominal in income currency minor; rate scaled × 10_000; spread in basis points. */
+/** FX: nominal in income currency minor; base rate minor (2dp); spread in basis points. */
 export function computeExpectedSettledMinorFx(
 	nominalMinor: number,
-	assumedBaseRateScaled: number,
+	assumedBaseRateMinor: number,
 	exchangeSpreadBasisPoints: number,
 ): number {
-	const effectiveRateScaled = computeEffectiveRateScaled(
-		assumedBaseRateScaled,
+	const effectiveRateMinor = computeEffectiveRateMinor(
+		assumedBaseRateMinor,
 		exchangeSpreadBasisPoints,
 	);
-	return Math.round((nominalMinor * effectiveRateScaled) / 10_000);
+	return Math.round((nominalMinor * effectiveRateMinor) / 100);
 }

@@ -15,7 +15,7 @@ export type MaterializeIncomeSourceInput = {
 	paymentLagBusinessDays: number;
 	endDate: string | null;
 	settlementPlatformId: string | null;
-	assumedBaseRateScaled: number | null;
+	assumedBaseRateMinor: number | null;
 	exchangeSpreadBasisPoints: number | null;
 	occurrenceDayOfMonth: number[];
 };
@@ -38,7 +38,7 @@ function computeSettledMinor(
 	cashCurrency: CurrencyCode,
 	platform: Pick<
 		MaterializeIncomeSourceInput,
-		"assumedBaseRateScaled" | "exchangeSpreadBasisPoints"
+		"assumedBaseRateMinor" | "exchangeSpreadBasisPoints"
 	>,
 ): number {
 	if (incomeCurrency === cashCurrency) {
@@ -46,7 +46,7 @@ function computeSettledMinor(
 	}
 
 	if (
-		platform.assumedBaseRateScaled == null ||
+		platform.assumedBaseRateMinor == null ||
 		platform.exchangeSpreadBasisPoints == null
 	) {
 		throw new Error(
@@ -56,7 +56,7 @@ function computeSettledMinor(
 
 	return computeExpectedSettledMinorFx(
 		nominalMinor,
-		platform.assumedBaseRateScaled,
+		platform.assumedBaseRateMinor,
 		platform.exchangeSpreadBasisPoints,
 	);
 }
